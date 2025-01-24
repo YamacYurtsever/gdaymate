@@ -2,7 +2,7 @@ CC = clang
 CFLAGS = -Wall -Wvla -Werror -Iinclude
 
 MAIN_FILE = src/server.c
-SUPPORTING_FILES = src/ThreadPool.c src/TaskQueue.c
+SUPPORTING_FILES = src/ThreadPool.c src/TaskQueue.c src/Task.c
 
 TARGET = server
 
