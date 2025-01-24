@@ -1,0 +1,1 @@
+Gdaymate is a simple CLI-based client-server messaging app
