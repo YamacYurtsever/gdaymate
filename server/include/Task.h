@@ -14,7 +14,7 @@ Task TaskNew(void (*function)(int arg), int arg);
 void TaskFree(Task task);
 
 /**
- * Executes a task.
+ * Executes a task, calling its function with its argument.
  */
 void TaskExecute(Task task);
 
