@@ -1,5 +1,10 @@
 // Task ADT Interface
 
+/**
+ * A task consists of a function and an integer argument. 
+ * Tasks can be created, executed, and freed dynamically.
+ */
+
 #ifndef TASK_H
 #define TASK_H
 
