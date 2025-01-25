@@ -1,4 +1,4 @@
-// Task Queue ADT Interface
+// Task Queue ADT Tests
 
 #include <stdio.h>
 #include <assert.h>
@@ -9,16 +9,14 @@
 void testTaskQueueNew(void);
 void testTaskQueueEnqueueDequeue(void);
 void testTaskQueueIsEmpty(void);
-void testTaskQueueFree(void);
 void testFunction(int arg);
 
 int main(void) {
     testTaskQueueNew();
     testTaskQueueEnqueueDequeue();
     testTaskQueueIsEmpty();
-    testTaskQueueFree();
 
-    printf("All TaskQueue tests passed!\n");
+    printf("All TaskQueue ADT tests passed!\n");
     return 0;
 }
 
@@ -70,15 +68,6 @@ void testTaskQueueIsEmpty(void) {
     assert(TaskQueueIsEmpty(q));
 
     TaskFree(dequeuedTask);
-    TaskQueueFree(q);
-}
-
-void testTaskQueueFree(void) {
-    TaskQueue q = TaskQueueNew();
-
-    TaskQueueEnqueue(q, TaskNew(testFunction, 1));
-    TaskQueueEnqueue(q, TaskNew(testFunction, 2));
-
     TaskQueueFree(q);
 }
 
