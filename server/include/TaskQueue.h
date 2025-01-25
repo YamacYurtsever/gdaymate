@@ -1,5 +1,10 @@
 // Task Queue ADT Interface
 
+/**
+ * A task queue is a thread-safe queue that stores tasks.
+ * Tasks can be enqueued, dequeued, and the queue can be checked for emptiness.
+ */
+
 #ifndef TASK_QUEUE_H
 #define TASK_QUEUE_H
 
