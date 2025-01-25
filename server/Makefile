@@ -1,13 +1,15 @@
 CC = clang
 CFLAGS = -Wall -Wvla -Werror -Iinclude
 
+BIN_DIR = bin
+TEST_DIR = test
+
 MAIN_FILE = src/server.c
 SUPPORTING_FILES = src/ThreadPool.c src/TaskQueue.c src/Task.c
-TEST_FILES = test/test_ThreadPool.c test/test_TaskQueue.c test/test_Task.c
+TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
 
-BIN_DIR = bin
 MAIN_TARGET = $(BIN_DIR)/server
-TEST_TARGETS = $(patsubst test/%.c, $(BIN_DIR)/%, $(TEST_FILES))
+TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 ########################################################################
 
