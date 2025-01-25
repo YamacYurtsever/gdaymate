@@ -3,7 +3,7 @@
 /**
  * A thread pool consists of multiple worker threads that execute tasks 
  * from a shared task queue. Tasks can be added to the task queue, 
- * and worker threads continuously fetch and execute tasks. 
+ * and worker threads continuously fetch and execute tasks.
  */
 
 #ifndef THREAD_POOL_H
