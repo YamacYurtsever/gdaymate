@@ -3,10 +3,11 @@ CFLAGS = -Wall -Wvla -Werror -Iinclude
 
 MAIN_FILE = src/server.c
 SUPPORTING_FILES = src/ThreadPool.c src/TaskQueue.c src/Task.c
-TEST_FILES = tests/testTask.c
+TEST_FILES = tests/testThreadPool.c tests/testTaskQueue.c tests/testTask.c
 
-MAIN_TARGET = server
-TEST_TARGETS = $(TEST_FILES:.c=)
+BIN_DIR = bin
+MAIN_TARGET = $(BIN_DIR)/server
+TEST_TARGETS = $(patsubst tests/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 ########################################################################
 
@@ -23,15 +24,19 @@ nosan: all
 ########################################################################
 
 .PHONY: all
-all:
-	$(CC) $(CFLAGS) $(MAIN_FILE) $(SUPPORTING_FILES) -o $(MAIN_TARGET)
+all: $(MAIN_TARGET)
+
+$(MAIN_TARGET): $(MAIN_FILE) $(SUPPORTING_FILES)
+	mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) $^ -o $@
 
 .PHONY: test
-test: $(TEST_TARGETS)
+tests: $(TEST_TARGETS)
 
-$(TEST_TARGETS): %: %.c $(SUPPORTING_FILES)
+$(BIN_DIR)/%: tests/%.c $(SUPPORTING_FILES)
+	mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $< $(SUPPORTING_FILES) -o $@
 
 .PHONY: clean
 clean:
-	rm $(MAIN_TARGET) $(TEST_TARGETS)
+	rm -rf $(BIN_DIR)
