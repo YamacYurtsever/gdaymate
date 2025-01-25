@@ -55,10 +55,14 @@ ThreadPool ThreadPoolNew(void) {
 }
 
 void ThreadPoolFree(ThreadPool pool) {
+    // Signal shutdown
     pthread_mutex_lock(&pool->lock);
     pool->shutdown = true;
     pthread_cond_broadcast(&pool->cond);
     pthread_mutex_unlock(&pool->lock);
+
+    pthread_cond_destroy(&pool->cond);
+    pthread_mutex_destroy(&pool->lock);
 
     for (int i = 0; i < THREAD_COUNT; i++) {
         pthread_join(pool->threads[i], NULL);
