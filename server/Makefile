@@ -3,11 +3,11 @@ CFLAGS = -Wall -Wvla -Werror -Iinclude
 
 MAIN_FILE = src/server.c
 SUPPORTING_FILES = src/ThreadPool.c src/TaskQueue.c src/Task.c
-TEST_FILES = tests/testThreadPool.c tests/testTaskQueue.c tests/testTask.c
+TEST_FILES = test/test_ThreadPool.c test/test_TaskQueue.c test/test_Task.c
 
 BIN_DIR = bin
 MAIN_TARGET = $(BIN_DIR)/server
-TEST_TARGETS = $(patsubst tests/%.c, $(BIN_DIR)/%, $(TEST_FILES))
+TEST_TARGETS = $(patsubst test/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 ########################################################################
 
@@ -31,9 +31,9 @@ $(MAIN_TARGET): $(MAIN_FILE) $(SUPPORTING_FILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
 .PHONY: test
-tests: $(TEST_TARGETS)
+test: $(TEST_TARGETS)
 
-$(BIN_DIR)/%: tests/%.c $(SUPPORTING_FILES)
+$(BIN_DIR)/%: test/%.c $(SUPPORTING_FILES)
 	mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $< $(SUPPORTING_FILES) -o $@
 
