@@ -88,15 +88,18 @@ void *ThreadPoolWorker(void *arg) {
         pthread_mutex_lock(&pool->lock);
 
         if (pool->shutdown) {
+            // Shutdown thread
             pthread_mutex_unlock(&pool->lock);
             break;
         } 
 
         if (!TaskQueueIsEmpty(pool->task_queue)) {
+            // Execute next task
             Task task = TaskQueueDequeue(pool->task_queue);
             TaskExecute(task);
             TaskFree(task);
         } else {
+            // Wait until signaled to wake up
             pthread_cond_wait(&pool->cond, &pool->lock);
         }
 
