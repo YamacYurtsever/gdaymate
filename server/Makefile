@@ -3,8 +3,10 @@ CFLAGS = -Wall -Wvla -Werror -Iinclude
 
 MAIN_FILE = src/server.c
 SUPPORTING_FILES = src/ThreadPool.c src/TaskQueue.c src/Task.c
+TEST_FILES = tests/testTask.c
 
-TARGET = server
+MAIN_TARGET = server
+TEST_TARGETS = $(TEST_FILES:.c=)
 
 ########################################################################
 
@@ -22,8 +24,14 @@ nosan: all
 
 .PHONY: all
 all:
-	$(CC) $(CFLAGS) $(MAIN_FILE) $(SUPPORTING_FILES) -o $(TARGET)
+	$(CC) $(CFLAGS) $(MAIN_FILE) $(SUPPORTING_FILES) -o $(MAIN_TARGET)
+
+.PHONY: test
+test: $(TEST_TARGETS)
+
+$(TEST_TARGETS): %: %.c $(SUPPORTING_FILES)
+	$(CC) $(CFLAGS) $< $(SUPPORTING_FILES) -o $@
 
 .PHONY: clean
 clean:
-	rm $(TARGET)
+	rm $(MAIN_TARGET) $(TEST_TARGETS)
