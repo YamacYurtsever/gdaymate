@@ -40,7 +40,7 @@ void TaskQueueFree(TaskQueue q) {
     while (curr != NULL) {
         struct node *temp = curr;
         curr = curr->next;
-        free(temp->task);
+        TaskFree(temp->task);
         free(temp);
     }
 

@@ -15,7 +15,7 @@ int main(void) {
     testTaskExecute();
     testTaskFree();
 
-    printf("All tests passed!\n");
+    printf("All Task tests passed!\n");
 
     return 0;
 }
