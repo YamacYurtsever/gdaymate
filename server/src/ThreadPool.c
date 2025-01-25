@@ -10,17 +10,16 @@
 #include "TaskQueue.h"
 #include "Task.h"
 
-#define THREAD_COUNT 5
-
 struct thread_pool {
     TaskQueue task_queue;
+    int thread_count;
     pthread_t *threads;
     bool shutdown;
     pthread_mutex_t lock;
     pthread_cond_t cond;
 };
 
-ThreadPool ThreadPoolNew(void) {
+ThreadPool ThreadPoolNew(int thread_count) {
     ThreadPool pool = malloc(sizeof(*pool));
     if (pool == NULL) {
         perror("malloc");
@@ -34,7 +33,9 @@ ThreadPool ThreadPoolNew(void) {
         exit(EXIT_FAILURE);
     }
 
-    pool->threads = malloc(sizeof(pthread_t) * THREAD_COUNT);
+    pool->thread_count = thread_count;
+
+    pool->threads = malloc(sizeof(pthread_t) * thread_count);
     if (pool->threads == NULL) {
         perror("malloc");
         free(pool);
@@ -47,7 +48,7 @@ ThreadPool ThreadPoolNew(void) {
     pthread_cond_init(&pool->cond, NULL);
 
     // Create worker threads
-    for (int i = 0; i < THREAD_COUNT; i++) {
+    for (int i = 0; i < pool->thread_count; i++) {
         pthread_create(&pool->threads[i], NULL, ThreadPoolWorker, pool);
     }
 
@@ -64,7 +65,7 @@ void ThreadPoolFree(ThreadPool pool) {
     pthread_cond_destroy(&pool->cond);
     pthread_mutex_destroy(&pool->lock);
 
-    for (int i = 0; i < THREAD_COUNT; i++) {
+    for (int i = 0; i < pool->thread_count; i++) {
         pthread_join(pool->threads[i], NULL);
     }
 

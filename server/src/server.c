@@ -12,6 +12,7 @@
 #define PORT 8080
 #define BACKLOG 5
 #define BUFFER_SIZE 1024
+#define THREAD_COUNT 5
 
 int create_server(void);
 int get_client(int server_sockfd);
@@ -22,7 +23,7 @@ int main(void) {
     int server_sockfd = create_server();
 
     // Create a thread pool
-    ThreadPool pool = ThreadPoolNew();
+    ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
 
     // Listen for incoming connections
     int res = listen(server_sockfd, BACKLOG);

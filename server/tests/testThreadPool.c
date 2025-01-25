@@ -21,13 +21,13 @@ int main(void) {
 }
 
 void testThreadPoolNew(void) {
-    ThreadPool pool = ThreadPoolNew();
+    ThreadPool pool = ThreadPoolNew(5);
     assert(pool != NULL);
     ThreadPoolFree(pool);
 }
 
 void testThreadPoolAddTask(void) {
-    ThreadPool pool = ThreadPoolNew();
+    ThreadPool pool = ThreadPoolNew(5);
     
     Task task1 = TaskNew(testFunction, 1);
     Task task2 = TaskNew(testFunction, 2);
