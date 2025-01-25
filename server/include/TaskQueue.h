@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+#include "Task.h"
+
 typedef struct task_queue *TaskQueue; 
 
 /**

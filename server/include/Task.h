@@ -3,6 +3,8 @@
 #ifndef TASK_H
 #define TASK_H
 
+typedef struct task *Task;
+
 /**
  * Creates a new task.
  */
@@ -18,4 +20,4 @@ void TaskFree(Task task);
  */
 void TaskExecute(Task task);
 
-#ifndef
+#endif
