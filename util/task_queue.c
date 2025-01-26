@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#include "TaskQueue.h"
-#include "Task.h"
+#include "task_queue.h"
+#include "task.h"
 
 struct task_queue {
     struct node *front;

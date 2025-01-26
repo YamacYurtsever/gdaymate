@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Task.h"
+#include "task.h"
 
 struct task {
     void (*function)(int arg);

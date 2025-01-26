@@ -4,9 +4,9 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "ThreadPool.h"
-#include "TaskQueue.h"
-#include "Task.h"
+#include "thread_pool.h"
+#include "task_queue.h"
+#include "task.h"
 
 void test_ThreadPoolNew(void);
 void test_ThreadPoolAddTask(void);

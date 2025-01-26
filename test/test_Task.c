@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "Task.h"
+#include "task.h"
 
 void test_TaskNew(void);
 void test_TaskExecute(void);

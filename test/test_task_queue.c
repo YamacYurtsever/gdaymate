@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "TaskQueue.h"
-#include "Task.h"
+#include "task_queue.h"
+#include "task.h"
 
 void test_TaskQueueNew(void);
 void test_TaskQueueEnqueueDequeue(void);

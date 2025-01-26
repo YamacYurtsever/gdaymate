@@ -6,9 +6,9 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include "ThreadPool.h"
-#include "TaskQueue.h"
-#include "Task.h"
+#include "thread_pool.h"
+#include "task_queue.h"
+#include "task.h"
 
 struct thread_pool {
     TaskQueue task_queue;

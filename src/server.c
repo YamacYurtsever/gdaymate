@@ -4,9 +4,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "ThreadPool.h"
-#include "TaskQueue.h"
-#include "Task.h"
+#include "thread_pool.h"
+#include "task_queue.h"
+#include "task.h"
 
 #define PORT 8080
 #define THREAD_COUNT 5
