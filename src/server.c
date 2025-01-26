@@ -49,7 +49,6 @@ int main(void) {
  * Creates a new TCP server socket, defines server socket address,
  * binds the socket to the socket address, and returns the socket file descriptor.
  */
-
 int create_server(void) {
     // Create socket
     int server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -80,7 +79,6 @@ int create_server(void) {
 /**
  * Starts a server, making it listen for incoming connections.
  */
-
 void start_server(int server_sockfd) {
     int res = listen(server_sockfd, BACKLOG);
     if (res == -1) {
@@ -95,7 +93,6 @@ void start_server(int server_sockfd) {
  * Accepts a new client connection on the given server socket,
  * and returns the client's socket file descriptor.
  */
-
 int get_client(int server_sockfd) {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
@@ -116,7 +113,6 @@ int get_client(int server_sockfd) {
 /**
  * Reads data from the client's socket, and logs the message.
  */
-
 void handle_client(int client_sockfd) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_received;

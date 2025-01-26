@@ -30,7 +30,6 @@ int main(void) {
 /**
  * Creates a new TCP client socket, and returns the socket file descriptor.
  */
-
 int create_client(void) {
     int client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_sockfd == -1) {
@@ -43,7 +42,6 @@ int create_client(void) {
 /**
  * Defines server socket address, connects the client to the server
  */
-
 void connect_server(int client_sockfd) {
     // Define server socket address
     struct sockaddr_in server_addr;
@@ -65,7 +63,6 @@ void connect_server(int client_sockfd) {
 /**
  * Sends a message to the server a client is connected to.
  */
-
 void send_server(int client_sockfd, char *message) {
     ssize_t bytes_sent = send(client_sockfd, message, strlen(message), 0);
     if (bytes_sent == -1) {
