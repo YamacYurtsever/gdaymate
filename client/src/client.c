@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
@@ -24,7 +25,8 @@ int main(void) {
     connect_server(client_sockfd, server_addr);
 
     // Send a message to the server
-    send_server(client_sockfd, "Hello from the client!");
+    char *message = "Hello from the client!";
+    send_server(client_sockfd, message);
 
     printf("Message sent to server: %s\n", message);
 
@@ -45,7 +47,7 @@ struct sockaddr_in get_server_address(void) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
-    server_addr.sin_addr.s_addr = INADDR_ANY;
+    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
     return server_addr;
 }
 
