@@ -16,7 +16,7 @@ int main(void) {
     testTaskQueueEnqueueDequeue();
     testTaskQueueIsEmpty();
 
-    printf("All TaskQueue ADT tests passed!\n");
+    printf("All TaskQueue tests passed!\n");
     return 0;
 }
 

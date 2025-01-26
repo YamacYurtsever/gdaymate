@@ -13,7 +13,7 @@ int main(void) {
     testTaskNew();
     testTaskExecute();
 
-    printf("All Task ADT tests passed!\n");
+    printf("All Task tests passed!\n");
 
     return 0;
 }

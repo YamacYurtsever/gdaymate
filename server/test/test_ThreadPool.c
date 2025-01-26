@@ -16,7 +16,7 @@ int main(void) {
     testThreadPoolNew();
     testThreadPoolAddTask();
 
-    printf("All ThreadPool ADT tests passed!\n");
+    printf("All ThreadPool tests passed!\n");
     return 0;
 }
 
