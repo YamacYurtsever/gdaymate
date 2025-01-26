@@ -11,7 +11,6 @@ BIN_DIR = bin
 # Files
 SERVER_FILE = $(SRC_DIR)/server.c
 CLIENT_FILE = $(SRC_DIR)/client.c
-GDMP_FILE = $(SRC_DIR)/gdmp.c
 UTIL_FILES = $(wildcard $(UTIL_DIR)/*.c)
 TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
 
@@ -26,17 +25,17 @@ TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 all: $(SERVER_TARGET) $(CLIENT_TARGET) $(TEST_TARGETS)
 
-$(SERVER_TARGET): $(SERVER_FILE) $(GDMP_FILE) $(UTIL_FILES)
+$(SERVER_TARGET): $(SERVER_FILE) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(CLIENT_TARGET): $(CLIENT_FILE) $(GDMP_FILE) $(UTIL_FILES)
+$(CLIENT_TARGET): $(CLIENT_FILE) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(BIN_DIR)/%: $(TEST_DIR)/%.c $(GDMP_FILE) $(UTIL_FILES)
+$(BIN_DIR)/%: $(TEST_DIR)/%.c $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $< $(GDMP_FILE) $(UTIL_FILES) -o $@
+	$(CC) $(CFLAGS) $< $(UTIL_FILES) -o $@
 
 clean:
 	rm -rf $(BIN_DIR)
