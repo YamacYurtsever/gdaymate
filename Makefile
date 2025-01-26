@@ -1,34 +1,42 @@
 # Compiler and flags
 CC = clang
-CFLAGS = -Wall -Wvla -Werror -Iinclude
+CFLAGS = -Wall -Wvla -Werror -Iutil
 
 # Directories
 SRC_DIR = src
+UTIL_DIR = util
 TEST_DIR = test
 BIN_DIR = bin
 
 # Files
-MAIN_FILE = $(SRC_DIR)/server.c
-SUPPORTING_FILES = $(SRC_DIR)/ThreadPool.c $(SRC_DIR)/TaskQueue.c $(SRC_DIR)/Task.c
+SERVER_FILE = $(SRC_DIR)/server.c
+CLIENT_FILE = $(SRC_DIR)/client.c
+GDMP_FILE = $(SRC_DIR)/gdmp.c
+UTIL_FILES = $(wildcard $(UTIL_DIR)/*.c)
 TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
 
 # Targets
-MAIN_TARGET = $(BIN_DIR)/server
+SERVER_TARGET = $(BIN_DIR)/server
+CLIENT_TARGET = $(BIN_DIR)/client
 TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 ########################################################################
 
 .PHONY: all clean test
 
-all: $(MAIN_TARGET) $(TEST_TARGETS)
+all: $(SERVER_TARGET) $(CLIENT_TARGET) $(TEST_TARGETS)
 
-$(MAIN_TARGET): $(MAIN_FILE) $(SUPPORTING_FILES)
+$(SERVER_TARGET): $(SERVER_FILE) $(GDMP_FILE) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(BIN_DIR)/%: $(TEST_DIR)/%.c $(SUPPORTING_FILES)
+$(CLIENT_TARGET): $(CLIENT_FILE) $(GDMP_FILE) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $< $(SUPPORTING_FILES) -o $@
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(BIN_DIR)/%: $(TEST_DIR)/%.c $(GDMP_FILE) $(UTIL_FILES)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) $< $(GDMP_FILE) $(UTIL_FILES) -o $@
 
 clean:
 	rm -rf $(BIN_DIR)
