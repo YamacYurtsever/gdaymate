@@ -24,22 +24,10 @@ int main(void) {
     // Create a thread pool
     ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
 
-    // Listen for incoming connections
-    int res = listen(server_sockfd, BACKLOG);
-    if (res == -1) {
-        perror("listen");
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Server listening on port %d...\n", PORT);
-
     // Server loop
     while (1) {
         // Accept a connection (get a client)
         int client_sockfd = get_client(server_sockfd);
-
-        printf("Accepted connection from client %d\n", client_sockfd);
 
         // Create a task to handle the client
         Task task = TaskNew(handle_client, client_sockfd);
@@ -54,8 +42,8 @@ int main(void) {
 }
 
 /**
- * Creates a new TCP server socket, binds it to the specified address, 
- * and returns the socket file descriptor.
+ * Creates a new TCP server socket, initializes the server's socket address,
+ * binds the socket to the socket address, and returns the socket file descriptor.
  */
 
 int create_server(void) {
@@ -82,6 +70,15 @@ int create_server(void) {
         exit(EXIT_FAILURE);
     }
 
+    // Listen for incoming connections
+    res = listen(server_sockfd, BACKLOG);
+    if (res == -1) {
+        perror("listen");
+        close(server_sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Server listening on port %d...\n", PORT);
     return server_sockfd;
 }
 
@@ -103,6 +100,7 @@ int get_client(int server_sockfd) {
         exit(EXIT_FAILURE);
     }
 
+    printf("Client %d connected\n", client_sockfd);
     return client_sockfd;
 }
 

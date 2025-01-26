@@ -10,50 +10,39 @@
 #define BUFFER_SIZE 1024
 
 int create_client(void);
-struct sockaddr_in get_server_address(void);
-void connect_server(int client_sockfd, struct sockaddr_in server_addr);
 void send_server(int client_sockfd, char *message);
 
 int main(void) {
     // Create a TCP client
-    int client_sockfd1 = create_client();
-    int client_sockfd2 = create_client();
-
-    // Define server address
-    struct sockaddr_in server_addr = get_server_address();
-
-    // Connect to the server
-    connect_server(client_sockfd1, server_addr);
-    connect_server(client_sockfd2, server_addr);
+    int client_sockfd = create_client();
 
     // Send a message to the server
     char *message = "G'day mate!";
-    send_server(client_sockfd1, message);
-    send_server(client_sockfd2, message);
+    send_server(client_sockfd, message);
 
-    close(client_sockfd1);
-    close(client_sockfd2);
+    close(client_sockfd);
     return 0;
 }
 
+/**
+ * Creates a new TCP client socket, and returns the file descriptor.
+ */
+
 int create_client(void) {
+    // Create socket
     int client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_sockfd == -1) {
         perror("socket");
         exit(EXIT_FAILURE);
     }
-    return client_sockfd;
-}
 
-struct sockaddr_in get_server_address(void) {
+    // Define server socket address
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
-    return server_addr;
-}
 
-void connect_server(int client_sockfd, struct sockaddr_in server_addr) {
+    // Connect client to server
     int res = connect(
         client_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)
     );
@@ -62,7 +51,13 @@ void connect_server(int client_sockfd, struct sockaddr_in server_addr) {
         close(client_sockfd);
         exit(EXIT_FAILURE);
     }
+
+    return client_sockfd;
 }
+
+/**
+ * Sends a message to the server a client is connected to.
+ */
 
 void send_server(int client_sockfd, char *message) {
     ssize_t bytes_sent = send(client_sockfd, message, strlen(message), 0);
