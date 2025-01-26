@@ -16,21 +16,23 @@ void send_server(int client_sockfd, char *message);
 
 int main(void) {
     // Create a TCP client
-    int client_sockfd = create_client();
+    int client_sockfd1 = create_client();
+    int client_sockfd2 = create_client();
 
     // Define server address
     struct sockaddr_in server_addr = get_server_address();
 
     // Connect to the server
-    connect_server(client_sockfd, server_addr);
+    connect_server(client_sockfd1, server_addr);
+    connect_server(client_sockfd2, server_addr);
 
     // Send a message to the server
-    char *message = "Hello from the client!";
-    send_server(client_sockfd, message);
+    char *message = "Gdaymate";
+    send_server(client_sockfd1, message);
+    send_server(client_sockfd2, message);
 
-    printf("Message sent to server: %s\n", message);
-
-    close(client_sockfd);
+    close(client_sockfd1);
+    close(client_sockfd2);
     return 0;
 }
 
@@ -69,4 +71,5 @@ void send_server(int client_sockfd, char *message) {
         close(client_sockfd);
         exit(EXIT_FAILURE);
     }
+    printf("Message sent to server: %s\n", message);
 }
