@@ -9,11 +9,12 @@
 #include "Task.h"
 
 #define PORT 8080
+#define THREAD_COUNT 5
 #define BACKLOG 5
 #define BUFFER_SIZE 1024
-#define THREAD_COUNT 5
 
 int create_server(void);
+void start_server(int server_sockfd);
 int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
 
@@ -23,6 +24,9 @@ int main(void) {
 
     // Create a thread pool
     ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
+
+    // Start the server (listen for connections)
+    start_server(server_sockfd);
 
     // Server loop
     while (1) {
@@ -42,7 +46,7 @@ int main(void) {
 }
 
 /**
- * Creates a new TCP server socket, initializes the server's socket address,
+ * Creates a new TCP server socket, defines server socket address,
  * binds the socket to the socket address, and returns the socket file descriptor.
  */
 
@@ -54,7 +58,7 @@ int create_server(void) {
         exit(EXIT_FAILURE);
     }
 
-    // Define socket address
+    // Define server socket address
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
@@ -70,16 +74,21 @@ int create_server(void) {
         exit(EXIT_FAILURE);
     }
 
-    // Listen for incoming connections
-    res = listen(server_sockfd, BACKLOG);
+    return server_sockfd;
+}
+
+/**
+ * Starts a server, making it listen for incoming connections.
+ */
+
+void start_server(int server_sockfd) {
+    int res = listen(server_sockfd, BACKLOG);
     if (res == -1) {
         perror("listen");
         close(server_sockfd);
         exit(EXIT_FAILURE);
     }
-
     printf("Server listening on port %d...\n", PORT);
-    return server_sockfd;
 }
 
 /**

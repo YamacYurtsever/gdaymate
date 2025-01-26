@@ -10,22 +10,25 @@
 #define BUFFER_SIZE 1024
 
 int create_client(void);
+void connect_server(int client_sockfd);
 void send_server(int client_sockfd, char *message);
 
 int main(void) {
     // Create a TCP client
     int client_sockfd = create_client();
 
+    // Connect to server
+    connect_server(client_sockfd);
+
     // Send a message to the server
-    char *message = "G'day mate!";
-    send_server(client_sockfd, message);
+    send_server(client_sockfd, "G'day mate!");
 
     close(client_sockfd);
     return 0;
 }
 
 /**
- * Creates a new TCP client socket, and returns the file descriptor.
+ * Creates a new TCP client socket, and returns the socket file descriptor.
  */
 
 int create_client(void) {
@@ -36,6 +39,14 @@ int create_client(void) {
         exit(EXIT_FAILURE);
     }
 
+    return client_sockfd;
+}
+
+/**
+ * Defines server socket address, connects the client to the server
+ */
+
+void connect_server(int client_sockfd) {
     // Define server socket address
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
@@ -51,8 +62,6 @@ int create_client(void) {
         close(client_sockfd);
         exit(EXIT_FAILURE);
     }
-
-    return client_sockfd;
 }
 
 /**
