@@ -27,7 +27,7 @@ int main(void) {
     connect_server(client_sockfd2, server_addr);
 
     // Send a message to the server
-    char *message = "Gdaymate";
+    char *message = "G'day mate!";
     send_server(client_sockfd1, message);
     send_server(client_sockfd2, message);
 
