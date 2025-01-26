@@ -32,13 +32,11 @@ int main(void) {
  */
 
 int create_client(void) {
-    // Create socket
     int client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_sockfd == -1) {
         perror("socket");
         exit(EXIT_FAILURE);
     }
-
     return client_sockfd;
 }
 

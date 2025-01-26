@@ -114,8 +114,7 @@ int get_client(int server_sockfd) {
 }
 
 /**
- * Reads data from the client's socket, logs the message, 
- * and closes the socket when the client disconnects.
+ * Reads data from the client's socket, and logs the message.
  */
 
 void handle_client(int client_sockfd) {
@@ -123,7 +122,6 @@ void handle_client(int client_sockfd) {
     ssize_t bytes_received;
 
     while ((bytes_received = recv(client_sockfd, buffer, BUFFER_SIZE - 1, 0)) > 0) {
-        // Log the message
         buffer[bytes_received] = '\0';
         printf("Client %d: %s\n", client_sockfd, buffer);
     }
