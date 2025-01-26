@@ -6,32 +6,32 @@
 #include "TaskQueue.h"
 #include "Task.h"
 
-void testTaskQueueNew(void);
-void testTaskQueueEnqueueDequeue(void);
-void testTaskQueueIsEmpty(void);
-void testFunction(int arg);
+void test_TaskQueueNew(void);
+void test_TaskQueueEnqueueDequeue(void);
+void test_TaskQueueIsEmpty(void);
+void log_task(int arg);
 
 int main(void) {
-    testTaskQueueNew();
-    testTaskQueueEnqueueDequeue();
-    testTaskQueueIsEmpty();
+    test_TaskQueueNew();
+    test_TaskQueueEnqueueDequeue();
+    test_TaskQueueIsEmpty();
 
-    printf("All TaskQueue tests passed!\n");
+    printf("All TaskQueue tests passed\n");
     return 0;
 }
 
-void testTaskQueueNew(void) {
+void test_TaskQueueNew(void) {
     TaskQueue q = TaskQueueNew();
     assert(q != NULL);
     assert(TaskQueueIsEmpty(q));
     TaskQueueFree(q);
 }
 
-void testTaskQueueEnqueueDequeue(void) {
+void test_TaskQueueEnqueueDequeue(void) {
     TaskQueue q = TaskQueueNew();
-    Task task1 = TaskNew(testFunction, 1);
-    Task task2 = TaskNew(testFunction, 2);
-    Task task3 = TaskNew(testFunction, 3);
+    Task task1 = TaskNew(log_task, 1);
+    Task task2 = TaskNew(log_task, 2);
+    Task task3 = TaskNew(log_task, 3);
 
     TaskQueueEnqueue(q, task1);
     TaskQueueEnqueue(q, task2);
@@ -55,11 +55,11 @@ void testTaskQueueEnqueueDequeue(void) {
     TaskQueueFree(q);
 }
 
-void testTaskQueueIsEmpty(void) {
+void test_TaskQueueIsEmpty(void) {
     TaskQueue q = TaskQueueNew();
     assert(TaskQueueIsEmpty(q));
 
-    Task task = TaskNew(testFunction, 42);
+    Task task = TaskNew(log_task, 42);
     TaskQueueEnqueue(q, task);
     assert(!TaskQueueIsEmpty(q));
 
@@ -71,6 +71,6 @@ void testTaskQueueIsEmpty(void) {
     TaskQueueFree(q);
 }
 
-void testFunction(int arg) {
+void log_task(int arg) {
     printf("Executing task with argument: %d\n", arg);
 }

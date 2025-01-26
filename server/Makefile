@@ -34,9 +34,9 @@ clean:
 	rm -rf $(BIN_DIR)
 
 test: $(TEST_TARGETS)
-	@echo "# Running tests..."
+	@echo "##### Running tests #####"
 	@for test_bin in $(TEST_TARGETS); do \
-	    echo "Running $$test_bin..."; \
+	    echo "Running $$test_bin"; \
 	    $$test_bin || exit 1; \
 	done
-	@echo "# All tests passed!"
+	@echo "##### All tests passed #####"

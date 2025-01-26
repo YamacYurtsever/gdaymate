@@ -5,31 +5,31 @@
 
 #include "Task.h"
 
-void testTaskNew(void);
-void testTaskExecute(void);
-void testFunction(int arg);
+void test_TaskNew(void);
+void test_TaskExecute(void);
+void log_task(int arg);
 
 int main(void) {
-    testTaskNew();
-    testTaskExecute();
+    test_TaskNew();
+    test_TaskExecute();
 
-    printf("All Task tests passed!\n");
+    printf("All Task tests passed\n");
 
     return 0;
 }
 
-void testTaskNew(void) {
-    Task task = TaskNew(testFunction, 1);
+void test_TaskNew(void) {
+    Task task = TaskNew(log_task, 1);
     assert(task != NULL);
     TaskFree(task);
 }
 
-void testTaskExecute(void) {
-    Task task = TaskNew(testFunction, 1);
+void test_TaskExecute(void) {
+    Task task = TaskNew(log_task, 1);
     TaskExecute(task);
     TaskFree(task);
 }
 
-void testFunction(int arg) {
-    printf("Task executed with arg: %d\n", arg);
+void log_task(int arg) {
+    printf("Executing task with argument: %d\n", arg);
 }
