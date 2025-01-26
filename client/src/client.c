@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 8080
+#define BUFFER_SIZE 1024
+
+int create_client(void);
+struct sockaddr_in get_server_address(void);
+void connect_server(int client_sockfd, struct sockaddr_in server_addr);
+void send_server(int client_sockfd, char *message);
+
+int main(void) {
+    // Create a TCP client
+    int client_sockfd = create_client();
+
+    // Define server address
+    struct sockaddr_in server_addr = get_server_address();
+
+    // Connect to the server
+    connect_server(client_sockfd, server_addr);
+
+    // Send a message to the server
+    send_server(client_sockfd, "Hello from the client!");
+
+    printf("Message sent to server: %s\n", message);
+
+    close(client_sockfd);
+    return 0;
+}
+
+int create_client(void) {
+    int client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_sockfd == -1) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+    return client_sockfd;
+}
+
+struct sockaddr_in get_server_address(void) {
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    return server_addr;
+}
+
+void connect_server(int client_sockfd, struct sockaddr_in server_addr) {
+    int res = connect(
+        client_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)
+    );
+    if (res == -1) {
+        perror("connect");
+        close(client_sockfd);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void send_server(int client_sockfd, char *message) {
+    ssize_t bytes_sent = send(client_sockfd, message, strlen(message), 0);
+    if (bytes_sent == -1) {
+        perror("send");
+        close(client_sockfd);
+        exit(EXIT_FAILURE);
+    }
+}
