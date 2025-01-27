@@ -1,12 +1,12 @@
-**Gdaymate** is a simple [[Command Line Interfaces | CLI]]-based [[Networks#Client-Server Model | client-server]] messaging app
+**Gdaymate** is a simple CLI-based client-server messaging app
 
 ---
 
 ### Server Logic
 
-1. Create a [[TCP]] server
+1. Create a TCP server
 	- Create a socket 
-	- Define server [[Networks#Socket Adresses | socket address]]
+	- Define server socket address
 	- Bind the socket to the socket address
 2. Create a thread pool
 3. Start the server (listen for connections)
@@ -34,7 +34,7 @@
 
 ### Client Logic
 
-1. Create a [[TCP]] client
+1. Create a TCP client
 	- Create a socket
 2. Connect to server
 	- Define server socket address
@@ -50,7 +50,7 @@
 
 ### Custom Protocol
 
-**Gdaymate Protocol (GDMP)** is a custom [[Network Protocols | network protocol]] that operates at the *application layer* of the [[Networks#OSI Model | OSI model]] defining the structure of messages in Gdaymate
+**Gdaymate Protocol (GDMP)** is a custom network protocol that operates at *the application layer* of the OSI model defining the structure of messages in Gdaymate
 
 ##### GDMP Messages
 
