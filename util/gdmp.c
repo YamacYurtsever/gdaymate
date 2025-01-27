@@ -146,8 +146,6 @@ char **get_headers(MessageType type) {
             headers[1] = "Content";
             headers[2] = "Timestamp";
             break;
-        case GDMP_ACK:
-            break;
         case GDMP_AUTH:
             break;
         default:
@@ -165,8 +163,6 @@ char **get_headers(MessageType type) {
 MessageType str_to_type(char *str) {
     if (strcmp(str, "GDMP_MESSAGE") == 0) {
         return GDMP_MESSAGE;
-    } else if (strcmp(str, "GDMP_ACK") == 0) {
-        return GDMP_ACK;
     } else if (strcmp(str, "GDMP_AUTH") == 0) {
         return GDMP_AUTH;
     } else {
@@ -181,8 +177,6 @@ MessageType str_to_type(char *str) {
 char *type_to_str(MessageType type) {
     if (type == GDMP_MESSAGE) {
         return "GDMP_MESSAGE";
-    } else if (type == GDMP_ACK) {
-        return "GDMP_ACK";
     } else if (type == GDMP_AUTH) {
         return "GDMP_AUTH";
     } else {

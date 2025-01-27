@@ -5,7 +5,6 @@
 
 enum message_type {
     GDMP_MESSAGE,
-    GDMP_ACK,
     GDMP_AUTH,
     GDMP_INVALID,
 };

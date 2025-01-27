@@ -18,7 +18,6 @@ int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
 
 void process_message(GDMPMessage msg);
-void process_ack(GDMPMessage msg);
 void process_auth(GDMPMessage msg);
 
 int main(void) {
@@ -130,9 +129,6 @@ void handle_client(int client_sockfd) {
             case GDMP_MESSAGE:
                 process_message(msg);
                 continue;
-            case GDMP_ACK:
-                process_ack(msg);
-                continue; 
             case GDMP_AUTH:
                 process_auth(msg);
                 continue; 
@@ -148,7 +144,6 @@ void process_message(GDMPMessage msg) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
-    // TODO: timestamp
 
     // TODO: Check message validity
 
@@ -156,10 +151,6 @@ void process_message(GDMPMessage msg) {
     printf("%s: %s\n", username, content);
 
     // TODO: Broadcast to other clients
-}
-
-void process_ack(GDMPMessage msg) {
-    
 }
 
 void process_auth(GDMPMessage msg) {

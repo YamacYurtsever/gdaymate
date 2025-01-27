@@ -61,7 +61,6 @@
 GDMP_MESSAGE
 Username: Will
 Content: G'day mate!
-Timestamp: 2025-01-26T12:34:56Z
 ```
 
 ##### GDMP Message Types
@@ -69,8 +68,7 @@ Timestamp: 2025-01-26T12:34:56Z
 **GDMP message types** each have certain headers that they expect, if an expected header isn't found then the message is invalid, additional headers are ignored
 
 1. GDMP_MESSAGE
-2. GDMP_ACK
-3. GDMP_AUTH
+2. GDMP_AUTH
 
 ##### GDMP Data
 
@@ -78,4 +76,3 @@ Timestamp: 2025-01-26T12:34:56Z
 
 - Username
 - Content
-- Timestamp
