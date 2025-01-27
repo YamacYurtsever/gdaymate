@@ -38,11 +38,11 @@ void GDMPFree(GDMPMessage msg) {
     free(msg);
 }
 
-void GDMPAdd(GDMPMessage msg, char *header, char *value) {
+void GDMPAddHeader(GDMPMessage msg, char *header, char *value) {
     HashTableInsert(msg->data, header, value);
 }
 
-char *GDMPGet(GDMPMessage msg, char *header) {
+char *GDMPGetValue(GDMPMessage msg, char *header) {
     if (!HashTableContains(msg->data, header)) return NULL;
     return HashTableGet(msg->data, header);
 }
@@ -65,7 +65,7 @@ char *GDMPStringify(GDMPMessage msg) {
     for (int i = 0; i < HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
         // Get a header-value pair
         char *header = headers[i];
-        char *value = GDMPGet(msg, header);
+        char *value = GDMPGetValue(msg, header);
         if (value == NULL) continue;
 
         // Concatenate the pair on top of the string
@@ -105,7 +105,7 @@ GDMPMessage GDMPParse(char *str) {
         char *value = pos + 2;
 
         // Set header-value pair
-        GDMPAdd(msg, header, value);
+        GDMPAddHeader(msg, header, value);
     }
 
     return msg;

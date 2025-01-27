@@ -24,21 +24,21 @@ GDMPMessage GDMPNew(MessageType type);
 void GDMPFree(GDMPMessage msg);
 
 /**
- * Adds a header-value pair to a GDMP message.
+ * Adds a header with the given value to a GDMP message.
  * Replaces the value if header already exists.
  */
-void GDMPAdd(GDMPMessage msg, char *header, char *value);
-
-/**
- * Returns a header's value in the GDMP message.
- * Returns NULL if it doesn't exist.
- */
-char *GDMPGet(GDMPMessage msg, char *header);
+void GDMPAddHeader(GDMPMessage msg, char *header, char *value);
 
 /**
  * Returns the message type of the gdmp message.
  */
 MessageType GDMPGetType(GDMPMessage msg);
+
+/**
+ * Returns a header's value in the GDMP message.
+ * Returns NULL if it doesn't exist.
+ */
+char *GDMPGetValue(GDMPMessage msg, char *header);
 
 /**
  * Serializes a GDMP message into a string.
