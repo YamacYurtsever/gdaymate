@@ -7,23 +7,21 @@
 #include <time.h>
 
 #include <gdmp.h>
+#include <ui.h>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
-#define BUFFER_SIZE 1024
 
 int create_client(void);
 void connect_server(int client_sockfd);
 void send_server(int client_sockfd, char *username, char *content);
 
 int main(int argc, char *argv[]) {
-    // Get Command Line Arguments
-    if (argc != 3) {
-        fprintf(stderr, "Usage: client [username] [content]\n");
-        exit(1);
-    }
-    char *username = argv[1];
-    char *content = argv[2];
+    UINew();
+
+    // Get username
+    char username[GDMP_USERNAME_MAX_LEN];
+    UIDisplayInputBox("Username: ", username, GDMP_USERNAME_MAX_LEN);
 
     // Create a TCP client
     int client_sockfd = create_client();
@@ -32,9 +30,17 @@ int main(int argc, char *argv[]) {
     connect_server(client_sockfd);
 
     // Send a message to the server
-    send_server(client_sockfd, username, content);
+    char content[GDMP_CONTENT_MAX_LEN];
+    while (1) {
+        UIDisplayInputBox("Content: ", content, GDMP_CONTENT_MAX_LEN);
+        if (strlen(content) > 0) {
+            send_server(client_sockfd, username, content);
+            memset(content, 0, GDMP_CONTENT_MAX_LEN);
+        }
+    }
 
     close(client_sockfd);
+    UIFree();
     return 0;
 }
 
@@ -94,5 +100,5 @@ void send_server(int client_sockfd, char *username, char *content) {
     }
 
     // Log message
-    printf("%s: %s\n", username, content);
+    UIDisplayMessage(username, content);
 }

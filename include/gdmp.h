@@ -3,6 +3,11 @@
 #ifndef GDMP_H
 #define GDMP_H
 
+#define GDMP_MESSAGE_MAX_LEN 1024
+#define GDMP_HEADERS_MAX_COUNT 10
+#define GDMP_USERNAME_MAX_LEN 128
+#define GDMP_CONTENT_MAX_LEN 50
+
 enum message_type {
     GDMP_MESSAGE,
     GDMP_AUTH,

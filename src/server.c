@@ -4,13 +4,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "thread_pool.h"
 #include "gdmp.h"
+#include "thread_pool.h"
 
 #define PORT 8080
 #define THREAD_COUNT 5
 #define BACKLOG 5
-#define BUFFER_SIZE 1024
 
 int create_server(void);
 void start_server(int server_sockfd);
@@ -115,10 +114,10 @@ int get_client(int server_sockfd) {
  * Reads data from the client's socket, and logs the message.
  */
 void handle_client(int client_sockfd) {
-    char buffer[BUFFER_SIZE];
+    char buffer[GDMP_MESSAGE_MAX_LEN];
     ssize_t bytes_received;
 
-    while ((bytes_received = recv(client_sockfd, buffer, BUFFER_SIZE - 1, 0)) > 0) {
+    while ((bytes_received = recv(client_sockfd, buffer, sizeof(buffer) - 1, 0)) > 0) {
         // Receive and parse string
         buffer[bytes_received] = '\0';
         GDMPMessage msg = GDMPParse(buffer);

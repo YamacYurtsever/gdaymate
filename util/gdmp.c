@@ -7,9 +7,6 @@
 #include "gdmp.h"
 #include "hash_table.h"
 
-#define MESSAGE_MAX_LEN 1024
-#define HEADERS_MAX_COUNT 10
-
 struct gdmp_message {
     MessageType type;
     HashTable data;
@@ -29,7 +26,7 @@ GDMPMessage GDMPNew(MessageType type) {
     }
 
     msg->type = type;
-    msg->data = HashTableNew(HEADERS_MAX_COUNT);
+    msg->data = HashTableNew(GDMP_HEADERS_MAX_COUNT);
 
     return msg;
 }
@@ -53,7 +50,7 @@ MessageType GDMPGetType(GDMPMessage msg) {
 }
 
 char *GDMPStringify(GDMPMessage msg) {
-    char *str = malloc(MESSAGE_MAX_LEN);
+    char *str = malloc(GDMP_MESSAGE_MAX_LEN);
     if (str == NULL) {
         perror("malloc");
         return NULL;
@@ -68,18 +65,18 @@ char *GDMPStringify(GDMPMessage msg) {
     strcat(str, type_str);
     strcat(str, "\n");
 
-    for (int i = 0; i < HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
+    for (int i = 0; i < GDMP_HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
         // Get a header and its value
         char *header = headers[i];
         char *value = GDMPGetValue(msg, header);
         if (value == NULL) continue;
 
         // Form the pair string
-        char pair[MESSAGE_MAX_LEN];
+        char pair[GDMP_MESSAGE_MAX_LEN];
         snprintf(pair, sizeof(pair), "%s: %s\n", header, value);
 
         // Concatenate the pair to the string
-        if (strlen(str) + strlen(pair) < MESSAGE_MAX_LEN) {
+        if (strlen(str) + strlen(pair) < GDMP_MESSAGE_MAX_LEN) {
             strcat(str, pair);
         } else {
             break;
@@ -94,7 +91,7 @@ GDMPMessage GDMPParse(char *str) {
     // Extract message type
     char *pos = strchr(str, '\n');
     int message_type_len = pos - str;
-    char type_str[MESSAGE_MAX_LEN + 1];
+    char type_str[GDMP_MESSAGE_MAX_LEN + 1];
     strncpy(type_str, str, message_type_len);
     type_str[message_type_len] = '\0';
 
@@ -134,7 +131,7 @@ GDMPMessage GDMPParse(char *str) {
  * Returns NULL if the message type is invalid.
  */
 char **get_headers(MessageType type) {
-    char **headers = calloc(HEADERS_MAX_COUNT + 1, sizeof(char *)); 
+    char **headers = calloc(GDMP_HEADERS_MAX_COUNT + 1, sizeof(char *)); 
     if (headers == NULL) {
         return NULL;
     }
