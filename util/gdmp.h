@@ -1,7 +1,7 @@
 // GDMP Interface
 
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
+#ifndef GDMP_H
+#define GDMP_H
 
 enum message_type {
     GDMP_MESSAGE,
