@@ -15,8 +15,9 @@ struct gdmp_message {
     HashTable data;
 };
 
-MessageType get_type(char *message_type_string);
 char **get_headers(MessageType type);
+MessageType str_to_type(char *type_string);
+char *type_to_str(MessageType type);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -62,16 +63,26 @@ char *GDMPStringify(GDMPMessage msg) {
     MessageType type = GDMPGetType(msg);
     char **headers = get_headers(type);
 
+    // Concatenate the type to the string
+    char *type_str = type_to_str(type);
+    strcat(str, type_str);
+
     for (int i = 0; i < HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
-        // Get a header-value pair
+        // Get a header and its value
         char *header = headers[i];
         char *value = GDMPGetValue(msg, header);
         if (value == NULL) continue;
 
-        // Concatenate the pair on top of the string
+        // Form the pair string
         char pair[MESSAGE_MAX_LEN];
         snprintf(pair, sizeof(pair), "%s: %s\n", header, value);
-        strcat(str, pair);
+
+        // Concatenate the pair to the string
+        if (strlen(str) + strlen(pair) < MESSAGE_MAX_LEN) {
+            strcat(str, pair);
+        } else {
+            break;
+        }
     }
 
     free(headers);
@@ -83,31 +94,36 @@ GDMPMessage GDMPParse(char *str) {
     char *pos = strchr(str, '\n');
     int message_type_len = pos - str;
 
-    char message_type_str[MESSAGE_MAX_LEN + 1];
-    strncpy(message_type_str, str, message_type_len);
-    message_type_str[message_type_len] = '\0';
-    
+    char type_str[MESSAGE_MAX_LEN + 1];
+    strncpy(type_str, str, message_type_len);
+    type_str[message_type_len] = '\0';
+
     // Set message type
-    MessageType type = get_type(message_type_str);
+    MessageType type = str_to_type(type_str);
+    if (type == GDMP_INVALID) return NULL;
     GDMPMessage msg = GDMPNew(type);
     str = pos + 1;
 
     char *pair;
-    while ((pair = strsep(&str, "\n")) != NULL) {
+    char *str_copy = strdup(str);
+
+    while ((pair = strsep(&str_copy, "\n")) != NULL) {
+        // Exit condition
+        if (*pair == '\0') {
+            break;
+        }
+
         // Extract header-value pair
         pos = strstr(pair, ": ");
-        int header_len = pos - pair;
-
-        char header[MESSAGE_MAX_LEN];
-        strncpy(header, pair, header_len);
-        header[header_len] = '\0';
-
+        *pos = '\0';
+        char *header = pair;
         char *value = pos + 2;
 
         // Set header-value pair
         GDMPAddHeader(msg, header, value);
     }
 
+    free(str_copy);
     return msg;
 }
 
@@ -115,9 +131,10 @@ GDMPMessage GDMPParse(char *str) {
 
 /** 
  * Returns an array of headers used by the given message type (NULL terminated).
+ * Returns NULL if the message type is invalid.
  */
 char **get_headers(MessageType type) {
-    char **headers = malloc(sizeof(char *) * HEADERS_MAX_COUNT);
+    char **headers = calloc(HEADERS_MAX_COUNT + 1, sizeof(char *)); 
     if (headers == NULL) {
         return NULL;
     }
@@ -127,13 +144,10 @@ char **get_headers(MessageType type) {
             headers[0] = "Username";
             headers[1] = "Timestamp";
             headers[2] = "Content";
-            headers[3] = NULL;  // Null-terminate the array
             break;
         case GDMP_ACK:
-            headers[0] = NULL;  // No headers for GDMP_ACK
             break;
         case GDMP_AUTH:
-            headers[0] = NULL;  // No headers for GDMP_AUTH
             break;
         default:
             free(headers);
@@ -144,16 +158,33 @@ char **get_headers(MessageType type) {
 }
 
 /** 
- * Convert the given message type string into a message type enum
+ * Converts the given message type string into a message type enum.
+ * Returns GDMP_INVALID if the given string is invalid.
  */
-MessageType get_type(char *message_type_str) {
-    if (strcmp(message_type_str, "GDMP_MESSAGE") == 0) {
+MessageType str_to_type(char *str) {
+    if (strcmp(str, "GDMP_MESSAGE") == 0) {
         return GDMP_MESSAGE;
-    } else if (strcmp(message_type_str, "GDMP_ACK") == 0) {
-        return GDMP_MESSAGE;
-    } else if (strcmp(message_type_str, "GDMP_AUTH") == 0) {
-        return GDMP_MESSAGE;
+    } else if (strcmp(str, "GDMP_ACK") == 0) {
+        return GDMP_ACK;
+    } else if (strcmp(str, "GDMP_AUTH") == 0) {
+        return GDMP_AUTH;
     } else {
         return GDMP_INVALID;
+    }
+}
+
+/** 
+ * Converts the given message type enum into a message type string.
+ * Returns NULL if the message type is invalid.
+ */
+char *type_to_str(MessageType type) {
+    if (type == GDMP_MESSAGE) {
+        return "GDMP_MESSAGE";
+    } else if (type == GDMP_ACK) {
+        return "GDMP_ACK";
+    } else if (type == GDMP_AUTH) {
+        return "GDMP_AUTH";
+    } else {
+        return NULL;
     }
 }

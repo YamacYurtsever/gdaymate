@@ -98,7 +98,6 @@ int hash(Key key, int num_slots) {
     return hash % num_slots;
 }
 
-
 /**
  * Checks if two keys are equal.
  */

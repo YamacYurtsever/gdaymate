@@ -18,7 +18,7 @@ int main(void) {
     test_GDMPStringify();
     test_GDMPParse();
 
-    printf("All ThreadPool tests passed\n");
+    printf("All GDMP tests passed\n");
     return 0;
 }
 

@@ -47,6 +47,7 @@ char *GDMPStringify(GDMPMessage msg);
 
 /**
  * Deserializes a string into a GDMP message.
+ * Returns NULL if the given swtring isn't valid.
  */
 GDMPMessage GDMPParse(char *str);
 
