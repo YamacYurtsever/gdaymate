@@ -15,12 +15,12 @@ struct gdmp_message {
     HashTable data;
 };
 
-MessageType map_str_to_type(char *message_type_string);
+MessageType get_type(char *message_type_string);
 char **get_headers(MessageType type);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
-GDMPMessage gdmp_new(MessageType type) {
+GDMPMessage GDMPNew(MessageType type) {
     GDMPMessage msg = malloc(sizeof(*msg));
     if (msg == NULL) {
         perror("malloc");
@@ -33,25 +33,25 @@ GDMPMessage gdmp_new(MessageType type) {
     return msg;
 }
 
-void gdmp_free(GDMPMessage msg) {
+void GDMPFree(GDMPMessage msg) {
     HashTableFree(msg->data);
     free(msg);
 }
 
-void gdmp_add(GDMPMessage msg, char *header, char *value) {
+void GDMPAdd(GDMPMessage msg, char *header, char *value) {
     HashTableInsert(msg->data, header, value);
 }
 
-char *gdmp_get(GDMPMessage msg, char *header) {
+char *GDMPGet(GDMPMessage msg, char *header) {
     if (!HashTableContains(msg->data, header)) return NULL;
     return HashTableGet(msg->data, header);
 }
 
-MessageType gdmp_get_type(GDMPMessage msg) {
+MessageType GDMPGetType(GDMPMessage msg) {
     return msg->type;
 }
 
-char *gdmp_stringify(GDMPMessage msg) {
+char *GDMPStringify(GDMPMessage msg) {
     char *str = malloc(MESSAGE_MAX_LEN);
     if (str == NULL) {
         perror("malloc");
@@ -59,13 +59,13 @@ char *gdmp_stringify(GDMPMessage msg) {
     }
     str[0] = '\0';
 
-    MessageType type = gdmp_get_type(msg);
+    MessageType type = GDMPGetType(msg);
     char **headers = get_headers(type);
 
     for (int i = 0; i < HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
         // Get a header-value pair
         char *header = headers[i];
-        char *value = gdmp_get(msg, header);
+        char *value = GDMPGet(msg, header);
         if (value == NULL) continue;
 
         // Concatenate the pair on top of the string
@@ -78,7 +78,7 @@ char *gdmp_stringify(GDMPMessage msg) {
     return str;
 }
 
-GDMPMessage gdmp_parse(char *str) {
+GDMPMessage GDMPParse(char *str) {
     // Extract message type
     char *pos = strchr(str, '\n');
     int message_type_len = pos - str;
@@ -88,8 +88,8 @@ GDMPMessage gdmp_parse(char *str) {
     message_type_str[message_type_len] = '\0';
     
     // Set message type
-    MessageType type = map_str_to_type(message_type_str);
-    GDMPMessage msg = gdmp_new(type);
+    MessageType type = get_type(message_type_str);
+    GDMPMessage msg = GDMPNew(type);
     str = pos + 1;
 
     char *pair;
@@ -105,7 +105,7 @@ GDMPMessage gdmp_parse(char *str) {
         char *value = pos + 2;
 
         // Set header-value pair
-        gdmp_add(msg, header, value);
+        GDMPAdd(msg, header, value);
     }
 
     return msg;
@@ -146,7 +146,7 @@ char **get_headers(MessageType type) {
 /** 
  * Convert the given message type string into a message type enum
  */
-MessageType map_str_to_type(char *message_type_str) {
+MessageType get_type(char *message_type_str) {
     if (strcmp(message_type_str, "GDMP_MESSAGE") == 0) {
         return GDMP_MESSAGE;
     } else if (strcmp(message_type_str, "GDMP_ACK") == 0) {
