@@ -148,6 +148,7 @@ void process_message(GDMPMessage msg) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
+    // TODO: timestamp
 
     // TODO: Check message validity
 
