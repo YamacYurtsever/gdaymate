@@ -5,8 +5,6 @@
 #include <netinet/in.h>
 
 #include "thread_pool.h"
-#include "task_queue.h"
-#include "task.h"
 #include "gdmp.h"
 
 #define PORT 8080
