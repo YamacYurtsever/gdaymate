@@ -1,12 +1,12 @@
-**Gdaymate** is a simple CLI-based client-server messaging app
+**Gdaymate** is a simple [[Command Line Interfaces | CLI]]-based [[Networks#Client-Server Model | client-server]] messaging app
 
 ---
 
 ### Server Logic
 
-1. Create a TCP server
+1. Create a [[TCP]] server
 	- Create a socket 
-	- Define server socket address
+	- Define server [[Networks#Socket Adresses | socket address]]
 	- Bind the socket to the socket address
 2. Create a thread pool
 3. Start the server (listen for connections)
@@ -34,7 +34,7 @@
 
 ### Client Logic
 
-1. Create a TCP client
+1. Create a [[TCP]] client
 	- Create a socket
 2. Connect to server
 	- Define server socket address
@@ -50,7 +50,7 @@
 
 ### Custom Protocol
 
-**Gdaymate Protocol (GDMP)** is a custom network protocol that operates at *the application layer* of the OSI model defining the structure of messages in Gdaymate
+**Gdaymate Protocol (GDMP)** is a custom [[Network Protocols | network protocol]] that operates at the *application layer* of the [[Networks#OSI Model | OSI model]] defining the structure of messages in Gdaymate
 
 ##### GDMP Messages
 
@@ -75,3 +75,20 @@ Content: G'day mate!
 
 - Username
 - Content
+
+---
+
+### Client User Interface
+
+Client user interface is built using the `ncurses` library
+
+- Display Message
+	1. Scroll the messages (if overflows)
+	2. Form the message
+	3. Copy the message to messages
+	4. Print the messages
+- Display Input Box
+	1. Initialize a new window (on the bottom of the page)
+	2. Draw the input box
+	3. Display the prompt
+	4. Capture the input (into the buffer)
