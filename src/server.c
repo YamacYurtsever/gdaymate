@@ -7,6 +7,7 @@
 #include "thread_pool.h"
 #include "task_queue.h"
 #include "task.h"
+#include "gdmp.h"
 
 #define PORT 8080
 #define THREAD_COUNT 5
@@ -17,6 +18,10 @@ int create_server(void);
 void start_server(int server_sockfd);
 int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
+
+void process_message(GDMPMessage msg);
+void process_ack(GDMPMessage msg);
+void process_auth(GDMPMessage msg)
 
 int main(void) {
     // Create a TCP server
@@ -106,7 +111,6 @@ int get_client(int server_sockfd) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Client %d connected\n", client_sockfd);
     return client_sockfd;
 }
 
@@ -118,10 +122,45 @@ void handle_client(int client_sockfd) {
     ssize_t bytes_received;
 
     while ((bytes_received = recv(client_sockfd, buffer, BUFFER_SIZE - 1, 0)) > 0) {
+        // Receive and parse string
         buffer[bytes_received] = '\0';
-        printf("Client %d: %s\n", client_sockfd, buffer);
+        GDMPMessage msg = GDMPParse(buffer);
+
+        // Get message type and send to processing
+        MessageType type = GDMPGetType(msg);
+        switch (type) {
+            case GDMP_MESSAGE:
+                process_message(msg);
+                continue;
+            case GDMP_ACK:
+                process_ack(msg);
+                continue; 
+            case GDMP_ACK:
+                process_auth(msg);
+                continue; 
+            default:
+                continue;
+        }
     }
 
-    printf("Client %d disconnected\n", client_sockfd);
     close(client_sockfd);
+}
+
+void process_message(GDMPMessage msg) {
+    // Access headers
+    char *username = GDMPGetValue(msg, "Username");
+    char *content = GDMPGetValue(msg, "Content");
+
+    // Log content
+    printf("%s: %s\n", username, content);
+
+    // TODO: Broadcast to other clients
+}
+
+void process_ack(GDMPMessage msg) {
+    
+}
+
+void process_auth(GDMPMessage msg) {
+    
 }

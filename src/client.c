@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <time.h>
+
+#include <gdmp.h>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
@@ -11,7 +14,7 @@
 
 int create_client(void);
 void connect_server(int client_sockfd);
-void send_server(int client_sockfd, char *message);
+void send_server(int client_sockfd, char *username, char *content);
 
 int main(void) {
     // Create a TCP client
@@ -21,7 +24,7 @@ int main(void) {
     connect_server(client_sockfd);
 
     // Send a message to the server
-    send_server(client_sockfd, "G'day mate!");
+    send_server(client_sockfd, "Yamac", "G'day mate!");
 
     close(client_sockfd);
     return 0;
@@ -63,12 +66,24 @@ void connect_server(int client_sockfd) {
 /**
  * Sends a message to the server a client is connected to.
  */
-void send_server(int client_sockfd, char *message) {
-    ssize_t bytes_sent = send(client_sockfd, message, strlen(message), 0);
+void send_server(int client_sockfd, char *username, char *content) {
+    // Form GDMP message
+    GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
+    GDMPAddHeader(msg, "Username", username);
+    GDMPAddHeader(msg, "Content", content);
+    GDMPAddHeader(msg, "Timestamp", "2025"); // Not implemented
+
+    // Serialize GDMP message
+    char *msg_str = GDMPStringify(msg);
+
+    // Send string
+    ssize_t bytes_sent = send(client_sockfd, msg_str, strlen(msg_str), 0);
     if (bytes_sent == -1) {
         perror("send");
         close(client_sockfd);
         exit(EXIT_FAILURE);
     }
-    printf("Message sent to server: %s\n", message);
+
+    // Log message
+    printf("%s: %s\n", username, content);
 }

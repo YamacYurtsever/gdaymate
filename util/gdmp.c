@@ -66,6 +66,7 @@ char *GDMPStringify(GDMPMessage msg) {
     // Concatenate the type to the string
     char *type_str = type_to_str(type);
     strcat(str, type_str);
+    strcat(str, "\n");
 
     for (int i = 0; i < HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
         // Get a header and its value
@@ -85,6 +86,7 @@ char *GDMPStringify(GDMPMessage msg) {
         }
     }
 
+    str[strlen(str) - 1] = '\0';
     free(headers);
     return str;
 }
