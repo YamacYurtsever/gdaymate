@@ -143,8 +143,8 @@ char **get_headers(MessageType type) {
     switch (type) {
         case GDMP_MESSAGE:
             headers[0] = "Username";
-            headers[1] = "Timestamp";
-            headers[2] = "Content";
+            headers[1] = "Content";
+            headers[2] = "Timestamp";
             break;
         case GDMP_ACK:
             break;

@@ -60,8 +60,8 @@
 ```
 GDMP_MESSAGE
 Username: Will
-Timestamp: 2025-01-26T12:34:56Z
 Content: G'day mate!
+Timestamp: 2025-01-26T12:34:56Z
 ```
 
 ##### GDMP Message Types
@@ -77,5 +77,5 @@ Content: G'day mate!
 **GDMP data** is given in header-value pairs which are *case-sensitive* and *unordered*
 
 - Username
-- Timestamp
 - Content
+- Timestamp
