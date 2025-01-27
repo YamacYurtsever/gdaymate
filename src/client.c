@@ -81,7 +81,6 @@ void send_server(int client_sockfd, char *username, char *content) {
     // Add headers to message
     GDMPAddHeader(msg, "Username", username);
     GDMPAddHeader(msg, "Content", content);
-    GDMPAddHeader(msg, "Timestamp", "2025"); // Not implemented
 
     // Serialize GDMP message
     char *msg_str = GDMPStringify(msg);
