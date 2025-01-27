@@ -86,7 +86,6 @@ char *GDMPStringify(GDMPMessage msg) {
         }
     }
 
-    str[strlen(str) - 1] = '\0';
     free(headers);
     return str;
 }
@@ -144,7 +143,6 @@ char **get_headers(MessageType type) {
         case GDMP_MESSAGE:
             headers[0] = "Username";
             headers[1] = "Content";
-            headers[2] = "Timestamp";
             break;
         case GDMP_AUTH:
             break;
