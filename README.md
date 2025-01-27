@@ -28,7 +28,6 @@
 	1. Access the headers
 	2. Log the content
 	3. Broadcast to other clients
-- GDMP_ACK
 - GDMP_AUTH
 
 ---

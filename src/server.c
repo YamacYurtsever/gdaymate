@@ -145,7 +145,7 @@ void process_message(GDMPMessage msg) {
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
 
-    // TODO: Check message validity
+    // TODO: Check message validity (contains necessary headers)
 
     // Log content
     printf("%s: %s\n", username, content);
