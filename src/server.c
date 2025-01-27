@@ -21,7 +21,7 @@ void handle_client(int client_sockfd);
 
 void process_message(GDMPMessage msg);
 void process_ack(GDMPMessage msg);
-void process_auth(GDMPMessage msg)
+void process_auth(GDMPMessage msg);
 
 int main(void) {
     // Create a TCP server
@@ -135,7 +135,7 @@ void handle_client(int client_sockfd) {
             case GDMP_ACK:
                 process_ack(msg);
                 continue; 
-            case GDMP_ACK:
+            case GDMP_AUTH:
                 process_auth(msg);
                 continue; 
             default:

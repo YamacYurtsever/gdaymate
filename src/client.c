@@ -16,7 +16,15 @@ int create_client(void);
 void connect_server(int client_sockfd);
 void send_server(int client_sockfd, char *username, char *content);
 
-int main(void) {
+int main(int argc, char *argv[]) {
+    // Get Command Line Arguments
+    if (argc != 3) {
+        fprintf(stderr, "Usage: client [username] [content]\n");
+        exit(1);
+    }
+    char *username = argv[1];
+    char *content = argv[2];
+
     // Create a TCP client
     int client_sockfd = create_client();
 
@@ -24,7 +32,7 @@ int main(void) {
     connect_server(client_sockfd);
 
     // Send a message to the server
-    send_server(client_sockfd, "Yamac", "G'day mate!");
+    send_server(client_sockfd, username, content);
 
     close(client_sockfd);
     return 0;
