@@ -1,4 +1,4 @@
-// Task ADT Tests
+// Task Tests
 
 #include <stdio.h>
 #include <assert.h>

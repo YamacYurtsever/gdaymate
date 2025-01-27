@@ -1,4 +1,4 @@
-// Thread Pool ADT Implementation
+// Thread Pool Implementation
 
 #include <stdio.h>
 #include <stdlib.h>

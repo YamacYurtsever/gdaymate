@@ -1,4 +1,4 @@
-// Hash Table ADT Implementation (Linear Probing)
+// Hash Table Implementation (Linear Probing)
 
 #include <stdio.h>
 #include <stdlib.h>

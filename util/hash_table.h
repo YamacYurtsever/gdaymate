@@ -1,4 +1,4 @@
-// Hash Table ADT Interface
+// Hash Table Interface
 
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H

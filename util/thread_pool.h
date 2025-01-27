@@ -1,4 +1,4 @@
-// Thread Pool ADT Interface
+// Thread Pool Interface
 
 /**
  * A thread pool consists of multiple worker threads that execute tasks 

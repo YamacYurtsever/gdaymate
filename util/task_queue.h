@@ -1,4 +1,4 @@
-// Task Queue ADT Interface
+// Task Queue Interface
 
 /**
  * A task queue is a thread-safe queue that stores tasks.

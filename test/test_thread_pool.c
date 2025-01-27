@@ -1,4 +1,4 @@
-// Thread Pool ADT Tests
+// Thread Pool Tests
 
 #include <stdio.h>
 #include <assert.h>

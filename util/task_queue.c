@@ -1,4 +1,4 @@
-// Task Queue ADT Implementation
+// Task Queue Implementation
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,4 @@
-// Task ADT Implementation
+// Task Implementation
 
 #include <stdio.h>
 #include <stdlib.h>

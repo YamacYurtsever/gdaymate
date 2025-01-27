@@ -1,4 +1,4 @@
-// Task ADT Interface
+// Task Interface
 
 /**
  * A task consists of a function and an integer argument. 

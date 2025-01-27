@@ -1,4 +1,4 @@
-// Task Queue ADT Tests
+// Task Queue Tests
 
 #include <stdio.h>
 #include <assert.h>
