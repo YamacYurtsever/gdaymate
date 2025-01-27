@@ -41,7 +41,8 @@
 	- Define server socket address
 	- Connect the client socket to the server socket address
 3. Send a message to the server
-	- Form the message
+	- Create a message
+	- Add the headers
 	- Serialize the message
 	- Send the string
 4. Log the message

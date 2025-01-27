@@ -75,8 +75,10 @@ void connect_server(int client_sockfd) {
  * Sends a message to the server a client is connected to.
  */
 void send_server(int client_sockfd, char *username, char *content) {
-    // Form GDMP message
+    // Create message
     GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
+
+    // Add headers to message
     GDMPAddHeader(msg, "Username", username);
     GDMPAddHeader(msg, "Content", content);
     GDMPAddHeader(msg, "Timestamp", "2025"); // Not implemented
