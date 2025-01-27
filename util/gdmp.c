@@ -93,7 +93,6 @@ GDMPMessage GDMPParse(char *str) {
     // Extract message type
     char *pos = strchr(str, '\n');
     int message_type_len = pos - str;
-
     char type_str[MESSAGE_MAX_LEN + 1];
     strncpy(type_str, str, message_type_len);
     type_str[message_type_len] = '\0';
