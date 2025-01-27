@@ -31,9 +31,9 @@ void test_GDMPNew(void) {
 void test_GDMPStringify(void) {
     GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
     
-    GDMPAdd(msg, "Username", "Will");
-    GDMPAdd(msg, "Timestamp", "2025-01-26T12:34:56Z");
-    GDMPAdd(msg, "Content", "G'day mate!");
+    GDMPAddHeader(msg, "Username", "Will");
+    GDMPAddHeader(msg, "Timestamp", "2025-01-26T12:34:56Z");
+    GDMPAddHeader(msg, "Content", "G'day mate!");
 
     char *str = GDMPStringify(msg);
     assert(str != NULL);
@@ -57,9 +57,9 @@ void test_GDMPParse(void) {
 
     assert(GDMPGetType(msg) == GDMP_MESSAGE);
 
-    assert(strcmp(GDMPGet(msg, "Username"), "Will") == 0);
-    assert(strcmp(GDMPGet(msg, "Timestamp"), "2025-01-26T12:34:56Z") == 0);
-    assert(strcmp(GDMPGet(msg, "Content"), "G'day mate!") == 0);
+    assert(strcmp(GDMPGetValue(msg, "Username"), "Will") == 0);
+    assert(strcmp(GDMPGetValue(msg, "Timestamp"), "2025-01-26T12:34:56Z") == 0);
+    assert(strcmp(GDMPGetValue(msg, "Content"), "G'day mate!") == 0);
 
     GDMPFree(msg);
 }
