@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = clang
-CFLAGS = -Wall -Wvla -Werror -Iutil -fsanitize=address
+CFLAGS = -Wall -Wvla -Werror -Iinclude -fsanitize=address
 
 # Directories
 SRC_DIR = src
