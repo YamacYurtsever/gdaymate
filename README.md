@@ -1,12 +1,12 @@
-**Gdaymate** is a simple CLI-based client-server messaging app
+**Gdaymate** is a simple [[Command Line Interfaces | CLI]]-based [[Networks#Client-Server Model | client-server]] messaging app
 
 ---
 
 ### Server Logic
 
-1. Create a TCP server
+1. Create a [[TCP]] server
 	- Create a socket 
-	- Define server socket address
+	- Define server [[Networks#Socket Adresses | socket address]]
 	- Bind the socket to the socket address
 2. Create a thread pool
 3. Start the server (listen for connections)
@@ -14,35 +14,67 @@
 	- Accept a connection (get a client)
 	- Create a task to handle the client
 	- Add the task to the thread pool's task queue
-	- Handle the client
-		- Receive the data
-		- Parse the data (according to custom protocol)
-		- Log the message
-		- Broadcast to other clients
+
+##### Handling the client
+ 
+1. Receive the string
+2. Parse the string
+3. Get message type
+4. Send message to processing (according to type)
+
+##### Processing
+
+- GDMP_MESSAGE
+	1. Access the headers
+	2. Log the content
+	3. Broadcast to other clients
+- GDMP_ACK
+- GDMP_AUTH
 
 ---
 
 ### Client Logic
 
-1. Create a TCP client
+1. Create a [[TCP]] client
 	- Create a socket
 2. Connect to server
 	- Define server socket address
 	- Connect the client socket to the server socket address
-2. Send a message to the server
+3. Send a message to the server
+	- Form the message
+	- Serialize the message
+	- Send the string
+4. Log the message
 
 ---
 
 ### Custom Protocol
 
-**Gdaymate Protocol (GDMP)** is a custom network protocol that operates at the application layer of the OSI model defining the structure of messages in Gdaymate
+**Gdaymate Protocol (GDMP)** is a custom [[Network Protocols | network protocol]] that operates at the *application layer* of the [[Networks#OSI Model | OSI model]] defining the structure of messages in Gdaymate
 
-1. Client *serializes* the content into a message (with additional metadata)
-2. Server *deserializes* the message
+##### GDMP Messages
+
+**GDMP messages** start with a message type followed by the data
 
 ```
-GDMP
-Username: Michael
+GDMP_MESSAGE
+Username: Will
 Timestamp: 2025-01-26T12:34:56Z
-Content: "G'day mate!"
+Content: G'day mate!
 ```
+
+##### GDMP Message Types
+
+**GDMP message types** each have certain headers that they expect, if an expected header isn't found then the message is invalid, additional headers are ignored
+
+1. GDMP_MESSAGE
+2. GDMP_ACK
+3. GDMP_AUTH
+
+##### GDMP Data
+
+**GDMP data** is given in header-value pairs which are *case-sensitive* and *unordered*
+
+- Username
+- Timestamp
+- Content
