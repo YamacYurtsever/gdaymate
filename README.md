@@ -4,13 +4,14 @@
 
 ### Server Logic
 
-1. Create a [[TCP]] server
+1. Create a TCP server
 	- Create a socket 
-	- Define server [[Networks#Socket Adresses | socket address]]
+	- Define server socket address
 	- Bind the socket to the socket address
 2. Start the server (listen for connections)
-3. Create a thread pool
-4. Server loop
+3. Stop the server (register signal for)
+4. Create a thread pool
+5. Server loop
 	- Accept a connection (get a client)
 	- Create a task to handle the client
 	- Add the task to the thread pool's task queue
@@ -34,7 +35,7 @@
 
 ### Client Logic
 
-1. Create a [[TCP]] client
+1. Create a TCP client
 	- Create a socket
 2. Connect to the server
 	- Define server socket address

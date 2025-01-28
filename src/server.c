@@ -31,7 +31,7 @@ int main(void) {
     // Start the server (listen for connections)
     start_server(server_sockfd);
 
-    // Stop the server (register signal)
+    // Stop the server (register signal for)
     signal(SIGINT, stop_server);
 
     // Create a thread pool
