@@ -6,8 +6,8 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#include <gdmp.h>
-#include <ui.h>
+#include "gdmp.h"
+#include "ui.h"
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
