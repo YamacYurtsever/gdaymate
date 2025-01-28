@@ -122,20 +122,18 @@ void handle_client(int client_sockfd) {
     while ((res = recv(client_sockfd, msg_str, sizeof(msg_str) - 1, 0)) > 0) {
         msg_str[res] = '\0';
 
-        // Parse string
+        // Parse string (get the message)
         GDMPMessage msg = GDMPParse(msg_str);
 
-        // Get message type
-        MessageType type = GDMPGetType(msg);
+        // TODO: Validate message (GDMPValidate)
 
         // Send message to processing (according to type)
-        switch (type) {
+        MessageType type = GDMPGetType(msg);
+        switch (GDMPGetType(type)) {
             case GDMP_TEXT_MESSAGE:
-                // validate_text_message(msg)
                 process_text_message(msg);
                 break;
             case GDMP_JOIN_MESSAGE:
-                // validate_join_message(msg)
                 process_join_message(msg);
                 break; 
             case GDMP_ERROR_MESSAGE:

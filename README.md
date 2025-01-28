@@ -18,9 +18,9 @@
 ##### Handling the client
  
 1. Receive the string
-2. Parse the string
-3. Get message type
-4. Send message to processing (according to type)
+2. Parse the string (get the message)
+3. Validate the message
+4. Send the message to processing (according to type)
 
 ##### Processing
 
