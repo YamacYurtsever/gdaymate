@@ -21,7 +21,7 @@ void UIFree(UI ui);
 void UIDisplayMessage(UI ui, char *message);
 
 /**
- * Displays an input box in the UI.
+ * Displays an input box in the UI, stores the inputed value in the buffer.
  */
 void UIDisplayInputBox(UI ui, char *prompt, char *buffer, size_t buffer_size);
 
