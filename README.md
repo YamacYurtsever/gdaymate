@@ -24,27 +24,35 @@
 
 ##### Processing
 
-- GDMP_MESSAGE
+- GDMP_TEXT_MESSAGE
 	1. Access the headers
 	2. Log the content
 	3. Broadcast to other clients
-- GDMP_AUTH
+- GDMP_JOIN_MESSAGE
 
 ---
 
 ### Client Logic
 
-1. Create a TCP client
+1. Get username
+2. Create a TCP client
 	- Create a socket
-2. Connect to server
+3. Connect to the server
 	- Define server socket address
 	- Connect the client socket to the server socket address
-3. Send a message to the server
-	- Create a message
-	- Add the headers
-	- Serialize the message
-	- Send the string
-4. Log the message
+4. Client loop
+	- Get content
+	- Send username and content as text message
+
+##### Sending
+
+- GDMP_TEXT_MESSAGE
+	1. Create a message
+	2. Add the headers to the message
+	3. Serialize the message
+	4. Send the string
+	5. Log text message
+- GDMP_JOIN_MESSAGE
 
 ---
 

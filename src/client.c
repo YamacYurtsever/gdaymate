@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     // Connect to server
     connect_server(client_sockfd);
 
-    // Send a message to the server
+    // Send text messages
     char content[GDMP_CONTENT_MAX_LEN];
     while (1) {
         UIDisplayInputBox(ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
@@ -100,7 +100,7 @@ void send_text_message(
     GDMPAddHeader(msg, "Content", content);
     GDMPAddHeader(msg, "Timestamp", timestamp);
 
-    // Serialize GDMP message
+    // Serialize message
     char *msg_str = GDMPStringify(msg);
 
     // Send string
@@ -111,7 +111,7 @@ void send_text_message(
         exit(EXIT_FAILURE);
     }
 
-    // Log message
+    // Log text message
     char message[GDMP_MESSAGE_MAX_LEN];
     snprintf(
         message, GDMP_MESSAGE_MAX_LEN, 
