@@ -11,8 +11,11 @@
 #define THREAD_COUNT 5
 #define BACKLOG 5
 
+// TODO: Server context
+
 int create_server(void);
 void start_server(int server_sockfd);
+void stop_server(int signal);
 int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
 
@@ -31,6 +34,9 @@ int main(void) {
     // Start the server (listen for connections)
     start_server(server_sockfd);
 
+    // Stop the server (register signal)
+    signal(SIGINT, stop_server);
+
     // Server loop
     while (1) {
         // Accept a connection (get a client)
@@ -42,10 +48,6 @@ int main(void) {
         // Add the task to the thread pool's task queue
         ThreadPoolAddTask(pool, task);
     }
-
-    ThreadPoolFree(pool);
-    close(server_sockfd);
-    return 0;
 }
 
 /**
@@ -90,6 +92,16 @@ void start_server(int server_sockfd) {
         exit(EXIT_FAILURE);
     }
     printf("Server listening on port %d...\n", PORT);
+}
+
+/**
+ * Stops a server, ending all connections, and freeing all memory.
+ */
+void stop_server(int signal) {
+    printf("Server shutting down...\n");
+    ThreadPoolFree(pool);
+    close(server_sockfd);
+    exit(0);
 }
 
 /**

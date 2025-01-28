@@ -12,6 +12,8 @@
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
 
+// TODO: Client context
+
 int create_client(void);
 void connect_server(int client_sockfd);
 
