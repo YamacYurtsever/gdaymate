@@ -60,6 +60,7 @@
 GDMP_TEXT_MESSAGE
 Username: Will
 Content: G'day mate!
+Timestamp: 14:18
 ```
 
 ##### GDMP Message Types
@@ -75,6 +76,7 @@ Content: G'day mate!
 
 - Username
 - Content
+- Timestamp
 
 ---
 
