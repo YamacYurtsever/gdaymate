@@ -82,7 +82,9 @@ void connect_server(int client_sockfd) {
 /**
  * Sends a GDMP text message to the server.
  */
-void send_text_message(UI ui, int client_sockfd, char *username, char *content) {
+void send_text_message(
+    UI ui, int client_sockfd, char *username, char *content
+) {
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
 

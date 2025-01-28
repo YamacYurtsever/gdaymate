@@ -48,7 +48,7 @@ int main(void) {
 
 /**
  * Creates a new TCP server socket, defines server socket address,
- * binds the socket to the socket address, and returns the socket file descriptor.
+ * binds the socket to the socket address, and returns the file descriptor.
  */
 int create_server(void) {
     // Create socket
@@ -111,28 +111,36 @@ int get_client(int server_sockfd) {
 }
 
 /**
- * Reads data from the client's socket, and logs the message.
+ * Handles communication with the client.
+ * Receives GDMP messages, and sends them to processing.
  */
 void handle_client(int client_sockfd) {
-    char buffer[GDMP_MESSAGE_MAX_LEN];
-    ssize_t bytes_received;
+    char msg_str[GDMP_MESSAGE_MAX_LEN];
+    ssize_t res;
 
-    while ((bytes_received = recv(client_sockfd, buffer, sizeof(buffer) - 1, 0)) > 0) {
-        // Receive and parse string
-        buffer[bytes_received] = '\0';
-        GDMPMessage msg = GDMPParse(buffer);
+    // Receive string
+    while ((res = recv(client_sockfd, msg_str, sizeof(msg_str) - 1, 0)) > 0) {
+        msg_str[res] = '\0';
 
-        // Get message type and send to processing
+        // Parse string
+        GDMPMessage msg = GDMPParse(msg_str);
+
+        // Get message type
         MessageType type = GDMPGetType(msg);
+
+        // Send message to processing (according to type)
         switch (type) {
             case GDMP_TEXT_MESSAGE:
+                // validate_text_message(msg)
                 process_text_message(msg);
-                continue;
+                break;
             case GDMP_JOIN_MESSAGE:
+                // validate_join_message(msg)
                 process_join_message(msg);
-                continue; 
-            default:
-                continue;
+                break; 
+            case GDMP_ERROR_MESSAGE:
+                printf("Error: Can't parse message\n");
+                break;
         }
     }
 
@@ -146,8 +154,6 @@ void process_text_message(GDMPMessage msg) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
-
-    // TODO: Check message validity (contains necessary headers)
 
     // Log content
     printf("%s: %s\n", username, content);

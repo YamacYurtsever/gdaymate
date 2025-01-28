@@ -127,7 +127,6 @@ GDMPMessage GDMPParse(char *str) {
 
 /** 
  * Returns an array of headers used by the given message type (NULL terminated).
- * Returns NULL if the message type is invalid.
  */
 char **get_headers(MessageType type) {
     char **headers = calloc(GDMP_HEADERS_MAX_COUNT + 1, sizeof(char *)); 
@@ -142,9 +141,8 @@ char **get_headers(MessageType type) {
             break;
         case GDMP_JOIN_MESSAGE:
             break;
-        default:
-            free(headers);
-            return NULL;
+        case GDMP_ERROR_MESSAGE:
+            break;
     }
 
     return headers;
@@ -152,7 +150,7 @@ char **get_headers(MessageType type) {
 
 /** 
  * Converts the given message type string into a message type enum.
- * Returns GDMP_ERROR_MESSAGE_MESSAGE if the given string is invalid.
+ * Returns GDMP_ERROR_MESSAGE if the given string is invalid.
  */
 MessageType str_to_type(char *str) {
     if (strcmp(str, "GDMP_TEXT_MESSAGE") == 0) {
