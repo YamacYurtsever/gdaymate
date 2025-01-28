@@ -4,12 +4,12 @@
 
 ### Server Logic
 
-1. Create a TCP server
+1. Create a [[TCP]] server
 	- Create a socket 
-	- Define server socket address
+	- Define server [[Networks#Socket Adresses | socket address]]
 	- Bind the socket to the socket address
-2. Create a thread pool
-3. Start the server (listen for connections)
+2. Start the server (listen for connections)
+3. Create a thread pool
 4. Server loop
 	- Accept a connection (get a client)
 	- Create a task to handle the client
@@ -34,13 +34,14 @@
 
 ### Client Logic
 
-1. Get username
-2. Create a TCP client
+1. Create a [[TCP]] client
 	- Create a socket
-3. Connect to the server
+2. Connect to the server
 	- Define server socket address
 	- Connect the client socket to the server socket address
-4. Client loop
+3. Create a user interface
+4. Get username
+5. Client loop
 	- Get content
 	- Send username and content as text message
 

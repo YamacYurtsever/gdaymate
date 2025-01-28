@@ -28,14 +28,14 @@ int main(void) {
     // Create a TCP server
     int server_sockfd = create_server();
 
-    // Create a thread pool
-    ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
-
     // Start the server (listen for connections)
     start_server(server_sockfd);
 
     // Stop the server (register signal)
     signal(SIGINT, stop_server);
+
+    // Create a thread pool
+    ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
 
     // Server loop
     while (1) {

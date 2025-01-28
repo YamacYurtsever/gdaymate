@@ -25,17 +25,18 @@ char *get_timestamp(void);
 //////////////////////////////// CLIENT LOGIC //////////////////////////////////
 
 int main(int argc, char *argv[]) {
-    UI ui = UINew();
-
-    // Get username
-    char username[GDMP_USERNAME_MAX_LEN];
-    UIDisplayInputBox(ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
-
     // Create a TCP client
     int client_sockfd = create_client();
 
     // Connect to server
     connect_server(client_sockfd);
+
+    // Create a user interface
+    UI ui = UINew();
+
+    // Get username
+    char username[GDMP_USERNAME_MAX_LEN];
+    UIDisplayInputBox(ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
 
     // Send text messages
     char content[GDMP_CONTENT_MAX_LEN];
