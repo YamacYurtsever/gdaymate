@@ -129,7 +129,7 @@ void handle_client(int client_sockfd) {
 
         // Send message to processing (according to type)
         MessageType type = GDMPGetType(msg);
-        switch (GDMPGetType(type)) {
+        switch (type) {
             case GDMP_TEXT_MESSAGE:
                 process_text_message(msg);
                 break;
@@ -152,9 +152,10 @@ void process_text_message(GDMPMessage msg) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
+    char *timestamp = GDMPGetValue(msg, "Timestamp");
 
     // Log content
-    printf("%s: %s\n", username, content);
+    printf("[%s] %s: %s\n", timestamp, username, content);
 
     // TODO: Broadcast to other clients
 }

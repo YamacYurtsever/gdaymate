@@ -18,6 +18,8 @@ void connect_server(int client_sockfd);
 void send_text_message(UI ui, int client_sockfd, char *username, char *content);
 void send_join_message(UI ui, int client_sockfd);
 
+char *get_timestamp(void);
+
 int main(int argc, char *argv[]) {
     UI ui = UINew();
 
@@ -88,9 +90,16 @@ void send_text_message(
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
 
+    // Get timestamp
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    char timestamp[6];
+    strftime(timestamp, sizeof(timestamp), "%H:%M", tm_info);
+
     // Add headers to message
     GDMPAddHeader(msg, "Username", username);
     GDMPAddHeader(msg, "Content", content);
+    GDMPAddHeader(msg, "Timestamp", timestamp);
 
     // Serialize GDMP message
     char *msg_str = GDMPStringify(msg);
@@ -105,7 +114,10 @@ void send_text_message(
 
     // Log message
     char message[GDMP_MESSAGE_MAX_LEN];
-    snprintf(message, GDMP_MESSAGE_MAX_LEN, "%s: %s", username, content);
+    snprintf(
+        message, GDMP_MESSAGE_MAX_LEN, 
+        "[%s] %s: %s", timestamp, username, content
+    );
     UIDisplayMessage(ui, message);
 }
 
