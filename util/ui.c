@@ -49,16 +49,12 @@ void UIFree(UI ui) {
     endwin();
 }
 
-void UIDisplayMessage(UI ui, char *username, char *content) {
+void UIDisplayMessage(UI ui, char *message) {
     // Scroll messages (if overflows)
     if (ui->message_count >= MESSAGE_BOX_HEIGHT) {
         ui->message_count = MESSAGE_BOX_HEIGHT - 1;
         scroll_messages(ui);
     }
-
-    // Form message
-    char message[GDMP_MESSAGE_MAX_LEN];
-    snprintf(message, GDMP_MESSAGE_MAX_LEN, "%s: %s", username, content);
 
     // Copy message to messages
     strncpy(ui->messages[ui->message_count], message, GDMP_MESSAGE_MAX_LEN - 1);
@@ -69,7 +65,7 @@ void UIDisplayMessage(UI ui, char *username, char *content) {
     print_messages(ui);
 }
 
-void UIDisplayInputBox(UI ui, char *prompt, char *buffer, size_t buffer_size) {
+void UIDisplayInputBox(UI ui, char *prompt, char *input, size_t input_size) {
     // Initialize a new window
     if (ui->input_win == NULL) {
         ui->input_win = newwin(
@@ -88,8 +84,8 @@ void UIDisplayInputBox(UI ui, char *prompt, char *buffer, size_t buffer_size) {
     mvwprintw(ui->input_win, 1, 1, "%s", prompt);
     wrefresh(ui->input_win);
 
-    // Capture input (into buffer)
-    wgetnstr(ui->input_win, buffer, buffer_size - 1);
+    // Capture input
+    wgetnstr(ui->input_win, input, input_size - 1);
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////

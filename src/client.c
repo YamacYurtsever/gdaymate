@@ -14,7 +14,9 @@
 
 int create_client(void);
 void connect_server(int client_sockfd);
-void send_server(int client_sockfd, char *username, char *content, UI ui);
+
+void send_message(UI ui, int client_sockfd, char *username, char *content);
+void send_auth(UI ui, int client_sockfd);
 
 int main(int argc, char *argv[]) {
     UI ui = UINew();
@@ -34,7 +36,7 @@ int main(int argc, char *argv[]) {
     while (1) {
         UIDisplayInputBox(ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
         if (strlen(content) > 0) {
-            send_server(client_sockfd, username, content, ui);
+            send_message(ui, client_sockfd, username, content);
             memset(content, 0, GDMP_CONTENT_MAX_LEN);
         }
     }
@@ -57,7 +59,7 @@ int create_client(void) {
 }
 
 /**
- * Defines server socket address, connects the client to the server
+ * Defines server socket address, connects the client to the server.
  */
 void connect_server(int client_sockfd) {
     // Define server socket address
@@ -78,9 +80,9 @@ void connect_server(int client_sockfd) {
 }
 
 /**
- * Sends a message to the server a client is connected to.
+ * Sends a GDMP message of type message to the server.
  */
-void send_server(int client_sockfd, char *username, char *content, UI ui) {
+void send_message(UI ui, int client_sockfd, char *username, char *content) {
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
 
@@ -100,5 +102,26 @@ void send_server(int client_sockfd, char *username, char *content, UI ui) {
     }
 
     // Log message
-    UIDisplayMessage(ui, username, content);
+    char message[GDMP_MESSAGE_MAX_LEN];
+    snprintf(message, GDMP_MESSAGE_MAX_LEN, "%s: %s", username, content);
+    UIDisplayMessage(ui, message);
+}
+
+/**
+ * Sends a GDMP message of type auth to the server.
+ */
+void send_auth(UI ui, int client_sockfd) {
+    // Create message
+    GDMPMessage msg = GDMPNew(GDMP_AUTH);
+
+    // Serialize GDMP message
+    char *msg_str = GDMPStringify(msg);
+
+    // Send string
+    ssize_t bytes_sent = send(client_sockfd, msg_str, strlen(msg_str), 0);
+    if (bytes_sent == -1) {
+        perror("send");
+        close(client_sockfd);
+        exit(EXIT_FAILURE);
+    }
 }

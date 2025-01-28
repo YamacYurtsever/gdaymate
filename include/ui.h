@@ -18,7 +18,7 @@ void UIFree(UI ui);
 /**
  * Displays a message in the UI.
  */
-void UIDisplayMessage(UI ui, char *username, char *content);
+void UIDisplayMessage(UI ui, char *message);
 
 /**
  * Displays an input box in the UI.
