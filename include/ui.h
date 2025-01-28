@@ -3,24 +3,26 @@
 #ifndef UI_H
 #define UI_H
 
+typedef struct ui *UI;
+
 /**
  * Creates a UI.
  */
-void UINew(void);
+UI UINew(void);
 
 /**
  * Frees a UI.
  */
-void UIFree(void);
+void UIFree(UI ui);
 
 /**
  * Displays a message in the UI.
  */
-void UIDisplayMessage(char *username, char *content);
+void UIDisplayMessage(UI ui, char *username, char *content);
 
 /**
  * Displays an input box in the UI.
  */
-void UIDisplayInputBox(char *prompt, char *buffer, size_t buffer_size);
+void UIDisplayInputBox(UI ui, char *prompt, char *buffer, size_t buffer_size);
 
 #endif

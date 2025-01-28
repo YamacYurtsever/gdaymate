@@ -10,43 +10,50 @@
 #define INPUT_BOX_WIDTH COLS
 #define INPUT_BOX_START_Y (LINES - INPUT_BOX_HEIGHT)
 #define INPUT_BOX_START_X 0
-
 #define MESSAGE_BOX_HEIGHT (LINES - INPUT_BOX_HEIGHT)
 
-static char **messages = NULL;
-static int message_count = 0;
-static WINDOW *input_win = NULL;
+struct ui {
+    char **messages;
+    int message_count;
+    WINDOW *input_win;
+};
 
-void scroll_messages(void);
-void print_messages(void);
+void scroll_messages(UI ui);
+void print_messages(UI ui);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
-void UINew(void) {
+UI UINew(void) {
     initscr();
+    UI ui = malloc(sizeof(*ui));
 
-    // Create messages array
-    messages = malloc(MESSAGE_BOX_HEIGHT * sizeof(char *));
+    ui->messages = malloc(MESSAGE_BOX_HEIGHT * sizeof(char *));
+    ui->message_count = 0;
+    ui->input_win = NULL;
+
     for (int i = 0; i < MESSAGE_BOX_HEIGHT; i++) {
-        messages[i] = malloc(GDMP_MESSAGE_MAX_LEN * sizeof(char));
+        ui->messages[i] = malloc(GDMP_MESSAGE_MAX_LEN * sizeof(char));
     }
+
+    return ui;
 }
 
-void UIFree(void) {
-    // Free messages array
+void UIFree(UI ui) {
     for (int i = 0; i < MESSAGE_BOX_HEIGHT; i++) {
-        free(messages[i]);
+        free(ui->messages[i]);
     }
-    free(messages);
+
+    free(ui->messages);
+    free(ui);
 
     endwin();
 }
 
-void UIDisplayMessage(char *username, char *content) {
+void UIDisplayMessage(UI ui, char *username, char *content) {
     // Scroll messages (if overflows)
-    if (message_count >= MESSAGE_BOX_HEIGHT) {
-        message_count = MESSAGE_BOX_HEIGHT - 1;
-        scroll_messages();
+    if (ui->message_count >= MESSAGE_BOX_HEIGHT) {
+        ui->message_count = MESSAGE_BOX_HEIGHT - 1;
+        scroll_messages(ui);
     }
 
     // Form message
@@ -54,18 +61,18 @@ void UIDisplayMessage(char *username, char *content) {
     snprintf(message, GDMP_MESSAGE_MAX_LEN, "%s: %s", username, content);
 
     // Copy message to messages
-    strncpy(messages[message_count], message, GDMP_MESSAGE_MAX_LEN - 1);
-    messages[message_count][GDMP_MESSAGE_MAX_LEN - 1] = '\0';
-    message_count++;
+    strncpy(ui->messages[ui->message_count], message, GDMP_MESSAGE_MAX_LEN - 1);
+    ui->messages[ui->message_count][GDMP_MESSAGE_MAX_LEN - 1] = '\0';
+    ui->message_count++;
 
     // Print messages
-    print_messages();
+    print_messages(ui);
 }
 
-void UIDisplayInputBox(char *prompt, char *buffer, size_t buffer_size) {
+void UIDisplayInputBox(UI ui, char *prompt, char *buffer, size_t buffer_size) {
     // Initialize a new window
-    if (!input_win) {
-        input_win = newwin(
+    if (ui->input_win == NULL) {
+        ui->input_win = newwin(
             INPUT_BOX_HEIGHT, 
             INPUT_BOX_WIDTH, 
             INPUT_BOX_START_Y, 
@@ -74,15 +81,15 @@ void UIDisplayInputBox(char *prompt, char *buffer, size_t buffer_size) {
     }
 
     // Draw input box
-    werase(input_win);
-    box(input_win, 0, 0);
+    werase(ui->input_win);
+    box(ui->input_win, 0, 0);
 
     // Display prompt
-    mvwprintw(input_win, 1, 1, "%s", prompt);
-    wrefresh(input_win);
+    mvwprintw(ui->input_win, 1, 1, "%s", prompt);
+    wrefresh(ui->input_win);
 
     // Capture input (into buffer)
-    wgetnstr(input_win, buffer, buffer_size - 1);
+    wgetnstr(ui->input_win, buffer, buffer_size - 1);
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
@@ -90,20 +97,20 @@ void UIDisplayInputBox(char *prompt, char *buffer, size_t buffer_size) {
 /**
  * Scrolls all messages, shifting them up in the messages array.
  */
-void scroll_messages(void) {
+void scroll_messages(UI ui) {
     for (int i = 0; i < MESSAGE_BOX_HEIGHT - 1; i++) {
-        strncpy(messages[i], messages[i + 1], GDMP_MESSAGE_MAX_LEN - 1);
-        messages[i][GDMP_MESSAGE_MAX_LEN - 1] = '\0';
+        strncpy(ui->messages[i], ui->messages[i + 1], GDMP_MESSAGE_MAX_LEN - 1);
+        ui->messages[i][GDMP_MESSAGE_MAX_LEN - 1] = '\0';
     }
 }
 
 /**
  * Prints all messages.
  */
-void print_messages(void) {
+void print_messages(UI ui) {
     clear();
-    for (int i = 0; i < message_count; i++) {
-        mvprintw(i, 0, "%s", messages[i]);
+    for (int i = 0; i < ui->message_count; i++) {
+        mvprintw(i, 0, "%s", ui->messages[i]);
     }
     refresh();
 }

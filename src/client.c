@@ -14,14 +14,14 @@
 
 int create_client(void);
 void connect_server(int client_sockfd);
-void send_server(int client_sockfd, char *username, char *content);
+void send_server(int client_sockfd, char *username, char *content, UI ui);
 
 int main(int argc, char *argv[]) {
-    UINew();
+    UI ui = UINew();
 
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
-    UIDisplayInputBox("Username: ", username, GDMP_USERNAME_MAX_LEN);
+    UIDisplayInputBox(ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
 
     // Create a TCP client
     int client_sockfd = create_client();
@@ -32,15 +32,15 @@ int main(int argc, char *argv[]) {
     // Send a message to the server
     char content[GDMP_CONTENT_MAX_LEN];
     while (1) {
-        UIDisplayInputBox("Content: ", content, GDMP_CONTENT_MAX_LEN);
+        UIDisplayInputBox(ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
         if (strlen(content) > 0) {
-            send_server(client_sockfd, username, content);
+            send_server(client_sockfd, username, content, ui);
             memset(content, 0, GDMP_CONTENT_MAX_LEN);
         }
     }
 
     close(client_sockfd);
-    UIFree();
+    UIFree(ui);
     return 0;
 }
 
@@ -80,7 +80,7 @@ void connect_server(int client_sockfd) {
 /**
  * Sends a message to the server a client is connected to.
  */
-void send_server(int client_sockfd, char *username, char *content) {
+void send_server(int client_sockfd, char *username, char *content, UI ui) {
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
 
@@ -100,5 +100,5 @@ void send_server(int client_sockfd, char *username, char *content) {
     }
 
     // Log message
-    UIDisplayMessage(username, content);
+    UIDisplayMessage(ui, username, content);
 }
