@@ -16,8 +16,8 @@ void start_server(int server_sockfd);
 int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
 
-void process_message(GDMPMessage msg);
-void process_auth(GDMPMessage msg);
+void process_text_message(GDMPMessage msg);
+void process_join_message(GDMPMessage msg);
 
 int main(void) {
     // Create a TCP server
@@ -125,11 +125,11 @@ void handle_client(int client_sockfd) {
         // Get message type and send to processing
         MessageType type = GDMPGetType(msg);
         switch (type) {
-            case GDMP_MESSAGE:
-                process_message(msg);
+            case GDMP_TEXT_MESSAGE:
+                process_text_message(msg);
                 continue;
-            case GDMP_AUTH:
-                process_auth(msg);
+            case GDMP_JOIN_MESSAGE:
+                process_join_message(msg);
                 continue; 
             default:
                 continue;
@@ -139,7 +139,10 @@ void handle_client(int client_sockfd) {
     close(client_sockfd);
 }
 
-void process_message(GDMPMessage msg) {
+/**
+ * Processes a GDMP text message.
+ */
+void process_text_message(GDMPMessage msg) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
@@ -152,6 +155,9 @@ void process_message(GDMPMessage msg) {
     // TODO: Broadcast to other clients
 }
 
-void process_auth(GDMPMessage msg) {
+/**
+ * Processes a GDMP join message.
+ */
+void process_join_message(GDMPMessage msg) {
     
 }

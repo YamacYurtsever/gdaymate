@@ -97,7 +97,6 @@ GDMPMessage GDMPParse(char *str) {
 
     // Set message type
     MessageType type = str_to_type(type_str);
-    if (type == GDMP_INVALID) return NULL;
     GDMPMessage msg = GDMPNew(type);
     str = pos + 1;
 
@@ -137,11 +136,11 @@ char **get_headers(MessageType type) {
     }
 
     switch (type) {
-        case GDMP_MESSAGE:
+        case GDMP_TEXT_MESSAGE:
             headers[0] = "Username";
             headers[1] = "Content";
             break;
-        case GDMP_AUTH:
+        case GDMP_JOIN_MESSAGE:
             break;
         default:
             free(headers);
@@ -153,15 +152,15 @@ char **get_headers(MessageType type) {
 
 /** 
  * Converts the given message type string into a message type enum.
- * Returns GDMP_INVALID if the given string is invalid.
+ * Returns GDMP_ERROR_MESSAGE_MESSAGE if the given string is invalid.
  */
 MessageType str_to_type(char *str) {
-    if (strcmp(str, "GDMP_MESSAGE") == 0) {
-        return GDMP_MESSAGE;
-    } else if (strcmp(str, "GDMP_AUTH") == 0) {
-        return GDMP_AUTH;
+    if (strcmp(str, "GDMP_TEXT_MESSAGE") == 0) {
+        return GDMP_TEXT_MESSAGE;
+    } else if (strcmp(str, "GDMP_JOIN_MESSAGE") == 0) {
+        return GDMP_JOIN_MESSAGE;
     } else {
-        return GDMP_INVALID;
+        return GDMP_ERROR_MESSAGE;
     }
 }
 
@@ -170,10 +169,10 @@ MessageType str_to_type(char *str) {
  * Returns NULL if the message type is invalid.
  */
 char *type_to_str(MessageType type) {
-    if (type == GDMP_MESSAGE) {
-        return "GDMP_MESSAGE";
-    } else if (type == GDMP_AUTH) {
-        return "GDMP_AUTH";
+    if (type == GDMP_TEXT_MESSAGE) {
+        return "GDMP_TEXT_MESSAGE";
+    } else if (type == GDMP_JOIN_MESSAGE) {
+        return "GDMP_JOIN_MESSAGE";
     } else {
         return NULL;
     }

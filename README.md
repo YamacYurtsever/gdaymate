@@ -57,7 +57,7 @@
 **GDMP messages** start with a message type followed by the data
 
 ```
-GDMP_MESSAGE
+GDMP_TEXT_MESSAGE
 Username: Will
 Content: G'day mate!
 ```
@@ -66,8 +66,8 @@ Content: G'day mate!
 
 **GDMP message types** each have certain headers that they expect, if an expected header isn't found then the message is invalid, additional headers are ignored
 
-1. GDMP_MESSAGE
-2. GDMP_AUTH
+1. GDMP_TEXT_MESSAGE
+2. GDMP_JOIN_MESSAGE
 
 ##### GDMP Data
 

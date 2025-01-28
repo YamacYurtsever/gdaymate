@@ -9,9 +9,9 @@
 #define GDMP_CONTENT_MAX_LEN 50
 
 enum message_type {
-    GDMP_MESSAGE,
-    GDMP_AUTH,
-    GDMP_INVALID,
+    GDMP_TEXT_MESSAGE,
+    GDMP_JOIN_MESSAGE,
+    GDMP_ERROR_MESSAGE,
 };
 
 typedef struct gdmp_message *GDMPMessage;
@@ -51,7 +51,6 @@ char *GDMPStringify(GDMPMessage msg);
 
 /**
  * Deserializes a string into a GDMP message.
- * Returns NULL if the given swtring isn't valid.
  */
 GDMPMessage GDMPParse(char *str);
 

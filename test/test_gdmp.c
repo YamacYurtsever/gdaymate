@@ -23,13 +23,13 @@ int main(void) {
 }
 
 void test_GDMPNew(void) {
-    GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
+    GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
     assert(msg != NULL);
     GDMPFree(msg);
 }
 
 void test_GDMPStringify(void) {
-    GDMPMessage msg = GDMPNew(GDMP_MESSAGE);
+    GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
     
     GDMPAddHeader(msg, "Username", "Will");
     GDMPAddHeader(msg, "Content", "Gday mate!");
@@ -45,14 +45,14 @@ void test_GDMPStringify(void) {
 }
 
 void test_GDMPParse(void) {
-    char *str = "GDMP_MESSAGE\n"
+    char *str = "GDMP_TEXT_MESSAGE\n"
                 "Username: Will\n"
                 "Content: G'day mate!\n";
 
     GDMPMessage msg = GDMPParse(str);
     assert(msg != NULL);
 
-    assert(GDMPGetType(msg) == GDMP_MESSAGE);
+    assert(GDMPGetType(msg) == GDMP_TEXT_MESSAGE);
 
     assert(strcmp(GDMPGetValue(msg, "Username"), "Will") == 0);
     assert(strcmp(GDMPGetValue(msg, "Content"), "G'day mate!") == 0);
