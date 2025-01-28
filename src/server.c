@@ -11,14 +11,8 @@
 #define THREAD_COUNT 5
 #define BACKLOG 5
 
-struct server_context {
-    int server_sockfd;
-    ThreadPool pool;
-};
-
 int create_server(void);
 void start_server(int server_sockfd);
-void stop_server(int signal);
 int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
 
@@ -33,9 +27,6 @@ int main(void) {
 
     // Start the server (listen for connections)
     start_server(server_sockfd);
-
-    // Stop the server (register signal for)
-    // signal(SIGINT, stop_server);
 
     // Create a thread pool
     ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
@@ -96,16 +87,6 @@ void start_server(int server_sockfd) {
     }
     printf("Server listening on port %d...\n", PORT);
 }
-
-/**
- * Stops a server, ending all connections, and freeing all memory.
- */
-// void stop_server(int signal) {
-//     printf("Server shutting down...\n");
-//     ThreadPoolFree(pool);
-//     close(server_sockfd);
-//     exit(0);
-// }
 
 /**
  * Accepts a new client connection on the given server socket,
