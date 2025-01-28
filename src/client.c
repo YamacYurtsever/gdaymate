@@ -20,6 +20,8 @@ void send_join_message(UI ui, int client_sockfd);
 
 char *get_timestamp(void);
 
+//////////////////////////////// CLIENT LOGIC //////////////////////////////////
+
 int main(int argc, char *argv[]) {
     UI ui = UINew();
 
@@ -81,6 +83,8 @@ void connect_server(int client_sockfd) {
     }
 }
 
+/////////////////////////////////// SENDING ////////////////////////////////////
+
 /**
  * Sends a GDMP text message to the server.
  */
@@ -89,12 +93,7 @@ void send_text_message(
 ) {
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
-
-    // Get timestamp
-    time_t now = time(NULL);
-    struct tm *tm_info = localtime(&now);
-    char timestamp[6];
-    strftime(timestamp, sizeof(timestamp), "%H:%M", tm_info);
+    char *timestamp = get_timestamp();
 
     // Add headers to message
     GDMPAddHeader(msg, "Username", username);
@@ -119,6 +118,9 @@ void send_text_message(
         "[%s] %s: %s", timestamp, username, content
     );
     UIDisplayMessage(ui, message);
+
+    free(msg_str);
+    free(timestamp);
 }
 
 /**
@@ -126,4 +128,17 @@ void send_text_message(
  */
 void send_join_message(UI ui, int client_sockfd) {
 
+}
+
+////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
+
+/**
+ * Returns current timestamp.
+ */
+char *get_timestamp(void) {
+    char *timestamp = malloc(GDMP_TIMESTAMP_MAX_LEN);
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    strftime(timestamp, sizeof(timestamp), "%H:%M", tm_info);
+    return timestamp;
 }

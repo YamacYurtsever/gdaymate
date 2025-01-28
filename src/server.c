@@ -19,6 +19,8 @@ void handle_client(int client_sockfd);
 void process_text_message(GDMPMessage msg);
 void process_join_message(GDMPMessage msg);
 
+//////////////////////////////// SERVER LOGIC //////////////////////////////////
+
 int main(void) {
     // Create a TCP server
     int server_sockfd = create_server();
@@ -144,6 +146,8 @@ void handle_client(int client_sockfd) {
 
     close(client_sockfd);
 }
+
+///////////////////////////////// PROCESSING ///////////////////////////////////
 
 /**
  * Processes a GDMP text message.
