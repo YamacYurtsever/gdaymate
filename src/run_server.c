@@ -10,6 +10,11 @@ void handle_sigint(int signal);
 
 int main(void) {
     srv = ServerNew();
+    if (srv == NULL) {
+        perror("ServerNew");
+        exit(EXIT_FAILURE);
+    }
+
     signal(SIGINT, handle_sigint);
     ServerStart(srv);
 

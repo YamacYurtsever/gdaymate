@@ -10,6 +10,11 @@ void handle_sigint(int signal);
 
 int main(void) {
     cli = ClientNew();
+    if (cli == NULL) {
+        perror("ClientNew");
+        exit(EXIT_FAILURE);
+    }
+
     signal(SIGINT, handle_sigint);
     ClientStart(cli);
 
