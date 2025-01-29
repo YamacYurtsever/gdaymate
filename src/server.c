@@ -17,9 +17,9 @@ struct server {
 };
 
 int setup_server(Server srv);
-void check_poll_set(Server srv);
+int check_poll_set(Server srv);
 int get_client(Server srv);
-void add_client(Server srv, int client_sockfd);
+int add_client(Server srv, int client_sockfd);
 void recv_client(Server srv, int poll_idx);
 
 void process_message(Server srv, GDMPMessage msg);
@@ -37,7 +37,7 @@ Server ServerNew(void) {
 
     srv->pool = ThreadPoolNew(SERVER_THREAD_COUNT);
     if (srv->pool == NULL) {
-        perror("ThreadPoolNew");
+        fprintf(stderr, "ThreadPoolNew: error\n");
         free(srv);
         return NULL;
     }
@@ -63,7 +63,7 @@ Server ServerNew(void) {
 
     int res = setup_server(srv);
     if (res == -1) {
-        perror("setup_server");
+        fprintf(stderr, "setup_server: error\n");
         free(srv->poll_set);
         close(srv->sockfd);
         ThreadPoolFree(srv->pool);
@@ -87,12 +87,12 @@ void ServerFree(Server srv) {
     free(srv);
 }
 
-void ServerStart(Server srv) {
+int ServerStart(Server srv) {
     // Start listening for incoming connections
     int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
     if (res == -1) {
         perror("listen");
-        return;
+        return -1;
     }
 
     printf("Server listening on port %d...\n", SERVER_PORT);
@@ -102,12 +102,18 @@ void ServerStart(Server srv) {
         int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
         if (res == -1) {
             perror("poll");
-            return;
+            return -1;
         }
 
         // Check all sockets in poll set
-        check_poll_set(srv);
+        res = check_poll_set(srv);
+        if (res == -1) {
+            fprintf(stderr, "check_poll_set: error\n");
+            return -1;
+        }
     }
+
+    return 0;
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
@@ -152,23 +158,40 @@ int setup_server(Server srv) {
  * If the socket is a server, accepts new client connection.
  * If the socket is a client, creates a task to receive message from the client,
  * and adds the task to the server's thread pool's task queue.
+ * Returns -1 on error.
  */
-void check_poll_set(Server srv) {
+int check_poll_set(Server srv) {
     for (int i = 0; i < srv->poll_count; i++) {
         if (srv->poll_set[i].revents & POLLIN) {
             if (srv->poll_set[i].fd == srv->sockfd) {
                 // Accept a connection
                 int client_sockfd = get_client(srv);
-                if (client_sockfd == -1) return;
-                add_client(srv, client_sockfd);
+                if (client_sockfd == -1) {
+                    fprintf(stderr, "get_client: error\n");
+                    return -1;
+                }
+
+                // Add it to the poll set
+                int res = add_client(srv, client_sockfd);
+                if (res == -1) {
+                    fprintf(stderr, "add_client: error\n");
+                    return -1;
+                }
             } else {
                 // Create a task to receive message
                 Task task = TaskNew(recv_client, srv, i);
-                if (task == NULL) return;
+                if (task == NULL) {
+                    fprintf(stderr, "TaskNew: error\n");
+                    return -1;
+                }
+
+                // Add it to the task queue
                 ThreadPoolAddTask(srv->pool, task);
             }
         }
     }
+
+    return 0;
 }
 
 /**
@@ -197,16 +220,18 @@ int get_client(Server srv) {
 /**
  * Adds a client to the poll set.
  */
-void add_client(Server srv, int client_sockfd) {
+int add_client(Server srv, int client_sockfd) {
     if (srv->poll_count >= SERVER_MAX_POLL_COUNT) {
-        fprintf(stderr, "Error: SERVER_MAX_POLL_COUNT\n");
+        fprintf(stderr, "add_client: SERVER_MAX_POLL_COUNT\n");
         close(client_sockfd);
-        return;
+        return -1;
     }
 
     srv->poll_set[srv->poll_count].fd = client_sockfd;
     srv->poll_set[srv->poll_count].events = POLLIN;
     srv->poll_count++;
+
+    return 0;
 }
 
 /**
@@ -262,7 +287,7 @@ void process_message(Server srv, GDMPMessage msg) {
             process_join_message(srv, msg);
             break; 
         case GDMP_ERROR_MESSAGE:
-            printf("GDMP_ERROR_MESSAGE\n");
+            fprintf(stderr, "GDMP_ERROR_MESSAGE\n");
             break;
     }
 }

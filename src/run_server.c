@@ -11,12 +11,18 @@ void handle_sigint(int signal);
 int main(void) {
     srv = ServerNew();
     if (srv == NULL) {
-        perror("ServerNew");
+        fprintf(stderr, "ServerNew: error\n");
         exit(EXIT_FAILURE);
     }
 
     signal(SIGINT, handle_sigint);
-    ServerStart(srv);
+
+    int res = ServerStart(srv);
+    if (res == -1) {
+        fprintf(stderr, "ServerStart: error\n");
+        ServerFree(srv);
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }

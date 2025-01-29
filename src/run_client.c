@@ -11,12 +11,17 @@ void handle_sigint(int signal);
 int main(void) {
     cli = ClientNew();
     if (cli == NULL) {
-        perror("ClientNew");
+        fprintf(stderr, "ClientNew: error\n");
         exit(EXIT_FAILURE);
     }
 
     signal(SIGINT, handle_sigint);
-    ClientStart(cli);
+
+    int res = ClientStart(cli);
+    if (res == -1) {
+        fprintf(stderr, "ClientStart: error\n");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }

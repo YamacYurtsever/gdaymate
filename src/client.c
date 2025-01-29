@@ -18,9 +18,8 @@ struct client {
 int setup_client(Client cli);
 char *get_timestamp(void);
 
-void send_text_message(Client cli, char *username, char *content, char *timestamp);
-void send_join_message(Client cli);
-
+int send_text_message(Client cli, char *username, char *content, char *timestamp);
+int send_join_message(Client cli);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -44,7 +43,7 @@ Client ClientNew(void) {
 
     int res = setup_client(cli);
     if (res == -1) {
-        perror("setup_client");
+        fprintf(stderr, "setup_client: error\n");
         close(cli->sockfd);
         UIFree(cli->ui);
         free(cli);
@@ -60,7 +59,7 @@ void ClientFree(Client cli) {
     free(cli);
 }
 
-void ClientStart(Client cli) {
+int ClientStart(Client cli) {
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
     UIDisplayInputBox(cli->ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
@@ -75,7 +74,11 @@ void ClientStart(Client cli) {
 
         // Send text message
         if (strlen(content) > 0) {
-            send_text_message(cli, username, content, timestamp);
+            int res = send_text_message(cli, username, content, timestamp);
+            if (res == -1) {
+                frpintf("send_text_message: error\n");
+                return -1;
+            }
         }
     }
 }
@@ -120,9 +123,9 @@ char *get_timestamp(void) {
 /////////////////////////////////// SENDING ////////////////////////////////////
 
 /**
- * Sends a GDMP text message to the server.
+ * Sends a GDMP text message to the server. Returns -1 on error.
  */
-void send_text_message(Client cli, char *username, char *content, char *timestamp) {
+int send_text_message(Client cli, char *username, char *content, char *timestamp) {
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
 
@@ -138,7 +141,9 @@ void send_text_message(Client cli, char *username, char *content, char *timestam
     ssize_t bytes_sent = send(cli->sockfd, msg_str, strlen(msg_str), 0);
     if (bytes_sent == -1) {
         perror("send");
-        return;
+        free(timestamp);
+        free(msg_str);
+        return -1;
     }
 
     // Display message
@@ -149,13 +154,14 @@ void send_text_message(Client cli, char *username, char *content, char *timestam
     );
     UIDisplayMessage(cli->ui, message);
 
-    free(msg_str);
     free(timestamp);
+    free(msg_str);
+    return 0;
 }
 
 /**
- * Sends a GDMP join message to the server.
+ * Sends a GDMP join message to the server. Returns -1 on error.
  */
-void send_join_message(Client cli) {
+int send_join_message(Client cli) {
 
 }

@@ -21,8 +21,8 @@ Server ServerNew(void);
 void ServerFree(Server srv);
 
 /**
- * Starts a server.
+ * Starts a server. Returns -1 on error.
  */
-void ServerStart(Server srv);
+int ServerStart(Server srv);
 
 #endif

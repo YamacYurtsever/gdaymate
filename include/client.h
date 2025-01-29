@@ -18,8 +18,8 @@ Client ClientNew(void);
 void ClientFree(Client cli);
 
 /**
- * Starts a client.
+ * Starts a client. Returns -1 on error.
  */
-void ClientStart(Client cli);
+int ClientStart(Client cli);
 
 #endif
