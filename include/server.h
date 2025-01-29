@@ -25,9 +25,4 @@ void ServerFree(Server srv);
  */
 void ServerStart(Server srv);
 
-/**
- * Stops a server.
- */
-void ServerStop(Server srv);
-
 #endif

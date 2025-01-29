@@ -75,6 +75,12 @@ Server ServerNew(void) {
 }
 
 void ServerFree(Server srv) {
+    printf("Server shutting down...\n");
+
+    for (int i = 1; i < srv->poll_count; i++) {
+        close(srv->poll_set[i].fd);
+    }
+
     free(srv->poll_set);
     close(srv->sockfd);
     ThreadPoolFree(srv->pool);
@@ -101,14 +107,6 @@ void ServerStart(Server srv) {
 
         // Check all sockets in poll set
         check_poll_set(srv);
-    }
-}
-
-void ServerStop(Server srv) {
-    printf("Server shutting down...\n");
-
-    for (int i = 0; i < srv->poll_count; i++) {
-        close(srv->poll_set[i].fd);
     }
 }
 
