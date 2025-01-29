@@ -8,9 +8,9 @@
 	- Create a socket 
 	- Define server socket address
 	- Bind the socket to the socket address
-2. Start the server (listen for connections)
-3. Stop the server (register signal for)
-4. Create a thread pool
+2. Create a thread pool
+3. Start the server (listen for connections)
+4. Setup SIGINT handler
 5. Server loop
 	- Accept a connection (get a client)
 	- Create a task to handle the client
@@ -37,14 +37,14 @@
 
 1. Create a TCP client
 	- Create a socket
-2. Connect to the server
+2. Connect to server
 	- Define server socket address
-	- Connect the client socket to the server socket address
+	- Connect socket to server socket address
 3. Create a user interface
 4. Get username
 5. Client loop
 	- Get content
-	- Send username and content as text message
+	- Send text message
 
 ##### Sending
 

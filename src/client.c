@@ -38,10 +38,13 @@ int main(int argc, char *argv[]) {
     char username[GDMP_USERNAME_MAX_LEN];
     UIDisplayInputBox(ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
 
-    // Send text messages
-    char content[GDMP_CONTENT_MAX_LEN];
+    // Client loop
     while (1) {
+        // Get content
+        char content[GDMP_CONTENT_MAX_LEN];
         UIDisplayInputBox(ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
+
+        // Send text message
         if (strlen(content) > 0) {
             send_text_message(ui, client_sockfd, username, content);
             memset(content, 0, GDMP_CONTENT_MAX_LEN);
@@ -75,7 +78,7 @@ void connect_server(int client_sockfd) {
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
 
-    // Connect client to server
+    // Connect socket to server socket address
     int res = connect(
         client_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)
     );

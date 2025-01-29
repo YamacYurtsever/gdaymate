@@ -11,8 +11,12 @@
 #define THREAD_COUNT 5
 #define BACKLOG 5
 
+int server_sockfd;
+ThreadPool pool;
+
 int create_server(void);
 void start_server(int server_sockfd);
+void stop_server(int server_sockfd);
 int get_client(int server_sockfd);
 void handle_client(int client_sockfd);
 
@@ -23,13 +27,16 @@ void process_join_message(GDMPMessage msg);
 
 int main(void) {
     // Create a TCP server
-    int server_sockfd = create_server();
-
-    // Start the server (listen for connections)
-    start_server(server_sockfd);
+    server_sockfd = create_server();
 
     // Create a thread pool
-    ThreadPool pool = ThreadPoolNew(THREAD_COUNT);
+    pool = ThreadPoolNew(THREAD_COUNT);
+
+    // Start server (listen for connections)
+    start_server(server_sockfd);
+
+    // Setup SIGINT handler
+    signal(SIGINT, stop_server);
 
     // Server loop
     while (1) {
@@ -39,9 +46,11 @@ int main(void) {
         // Create a task to handle the client
         Task task = TaskNew(handle_client, client_sockfd);
 
-        // Add the task to the thread pool's task queue
+        // Add task to thread pool's task queue
         ThreadPoolAddTask(pool, task);
     }
+
+    return 0;
 }
 
 /**
@@ -86,6 +95,16 @@ void start_server(int server_sockfd) {
         exit(EXIT_FAILURE);
     }
     printf("Server listening on port %d...\n", PORT);
+}
+
+/**
+ * Stops a server.
+ */
+void stop_server(int signal) {
+    printf("Server shutting down...\n");
+    ThreadPoolFree(pool);
+    close(server_sockfd);
+    exit(0);
 }
 
 /**
@@ -138,6 +157,12 @@ void handle_client(int client_sockfd) {
                 printf("Error: Can't parse message\n");
                 break;
         }
+    }
+
+    if (res == -1) {
+        perror("recv");
+        close(client_sockfd);
+        exit(EXIT_FAILURE);
     }
 
     close(client_sockfd);
