@@ -18,9 +18,9 @@ typedef struct task *Task;
  * Returns NULL on error.
  */
 Task TaskNew(
-    void (*function)(Server srv, int poll_idx), 
+    void (*function)(Server srv, int client_sockfd), 
     Server srv, 
-    int poll_idx
+    int client_sockfd
 );
 
 /**

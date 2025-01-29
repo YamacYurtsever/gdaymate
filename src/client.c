@@ -76,11 +76,13 @@ int ClientStart(Client cli) {
         if (strlen(content) > 0) {
             int res = send_text_message(cli, username, content, timestamp);
             if (res == -1) {
-                frpintf("send_text_message: error\n");
+                fprintf(stderr, "send_text_message: error\n");
                 return -1;
             }
         }
     }
+
+    return 0;
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
@@ -116,7 +118,7 @@ char *get_timestamp(void) {
     char *timestamp = malloc(GDMP_TIMESTAMP_MAX_LEN);
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
-    strftime(timestamp, sizeof(timestamp), CLIENT_TIMESTAMP_FORMAT, tm_info);
+    strftime(timestamp, GDMP_TIMESTAMP_MAX_LEN, CLIENT_TIMESTAMP_FORMAT, tm_info);
     return timestamp;
 }
 
@@ -163,5 +165,5 @@ int send_text_message(Client cli, char *username, char *content, char *timestamp
  * Sends a GDMP join message to the server. Returns -1 on error.
  */
 int send_join_message(Client cli) {
-
+    return 0;
 }
