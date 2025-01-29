@@ -9,14 +9,14 @@ TEST_DIR = test
 BIN_DIR = bin
 
 # Files
-SERVER_FILE = $(SRC_DIR)/server.c
-CLIENT_FILE = $(SRC_DIR)/client.c
+SERVER_FILES = $(SRC_DIR)/run_server.c $(SRC_DIR)/server.c
+CLIENT_FILES = $(SRC_DIR)/run_client.c $(SRC_DIR)/client.c
 UTIL_FILES = $(wildcard $(UTIL_DIR)/*.c)
 TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
 
 # Targets
-SERVER_TARGET = $(BIN_DIR)/server
-CLIENT_TARGET = $(BIN_DIR)/client
+SERVER_TARGET = $(BIN_DIR)/run_server
+CLIENT_TARGET = $(BIN_DIR)/run_client
 TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 ########################################################################
@@ -25,11 +25,11 @@ TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 all: $(SERVER_TARGET) $(CLIENT_TARGET) $(TEST_TARGETS)
 
-$(SERVER_TARGET): $(SERVER_FILE) $(UTIL_FILES)
+$(SERVER_TARGET): $(SERVER_FILES) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(CLIENT_TARGET): $(CLIENT_FILE) $(UTIL_FILES)
+$(CLIENT_TARGET): $(CLIENT_FILES) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 

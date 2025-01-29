@@ -8,12 +8,20 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "task.h"
+#include "server.h"
+
 typedef struct task *Task;
 
 /**
  * Creates a new task.
+ * Returns NULL on error.
  */
-Task TaskNew(void (*function)(int arg), int arg);
+Task TaskNew(
+    void (*function)(Server srv, int poll_idx), 
+    Server srv, 
+    int poll_idx
+);
 
 /**
  * Frees a task.

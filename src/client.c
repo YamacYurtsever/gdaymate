@@ -6,87 +6,115 @@
 #include <arpa/inet.h>
 #include <time.h>
 
+#include "client.h"
 #include "gdmp.h"
 #include "ui.h"
 
-#define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 8080
+struct client {
+    UI ui;
+    int sockfd;
+};
 
-// TODO: Client context
-
-int create_client(void);
-void connect_server(int client_sockfd);
-
-void send_text_message(UI ui, int client_sockfd, char *username, char *content);
-void send_join_message(UI ui, int client_sockfd);
-
+int setup_client(Client cli);
 char *get_timestamp(void);
 
-//////////////////////////////// CLIENT LOGIC //////////////////////////////////
+void send_text_message(Client cli, char *username, char *content, char *timestamp);
+void send_join_message(Client cli);
 
-int main(int argc, char *argv[]) {
-    // Create a TCP client
-    int client_sockfd = create_client();
 
-    // Connect to server
-    connect_server(client_sockfd);
+////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
-    // Create a user interface
-    UI ui = UINew();
+Client ClientNew(void) {
+    Client cli = malloc(sizeof(struct client));
+    if (cli == NULL) {
+        perror("malloc");
+        free(cli);
+        return NULL;
+    }
 
+    cli->ui = UINew();
+
+    cli->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (cli->sockfd == -1) {
+        perror("socket");
+        UIFree(cli->ui);
+        free(cli);
+        exit(EXIT_FAILURE);
+    }
+
+    int res = setup_client(cli);
+    if (res == -1) {
+        perror("setup_client");
+        close(cli->sockfd);
+        UIFree(cli->ui);
+        free(cli);
+        return NULL;
+    }
+
+    return cli;
+}
+
+void ClientFree(Client cli) {
+    close(cli->sockfd);
+    UIFree(cli->ui);
+    free(cli);
+}
+
+void ClientStart(Client cli) {
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
-    UIDisplayInputBox(ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
+    UIDisplayInputBox(cli->ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
 
-    // Client loop
     while (1) {
         // Get content
         char content[GDMP_CONTENT_MAX_LEN];
-        UIDisplayInputBox(ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
+        UIDisplayInputBox(cli->ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
+
+        // Get timestamp
+        char *timestamp = get_timestamp();
 
         // Send text message
         if (strlen(content) > 0) {
-            send_text_message(ui, client_sockfd, username, content);
-            memset(content, 0, GDMP_CONTENT_MAX_LEN);
+            send_text_message(cli, username, content, timestamp);
         }
     }
+}
 
-    close(client_sockfd);
-    UIFree(ui);
+////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
+
+/**
+ * Defines server socket address, 
+ * connects client socket to server socket address.
+ * Returns 0 on success, and -1 on error.
+ */
+int setup_client(Client cli) {
+    // Define server socket address
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(CLIENT_SERVER_PORT);
+    inet_pton(AF_INET, CLIENT_SERVER_IP, &server_addr.sin_addr);
+
+    // Connect client socket to server socket address
+    int res = connect(
+        cli->sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)
+    );
+    if (res == -1) {
+        perror("connect");
+        return -1;
+    }
+
     return 0;
 }
 
 /**
- * Creates a new TCP client socket, and returns the socket file descriptor.
+ * Gets current timestamp.
  */
-int create_client(void) {
-    int client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_sockfd == -1) {
-        perror("socket");
-        exit(EXIT_FAILURE);
-    }
-    return client_sockfd;
-}
-
-/**
- * Defines server socket address, connects the client to the server.
- */
-void connect_server(int client_sockfd) {
-    // Define server socket address
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
-
-    // Connect socket to server socket address
-    int res = connect(
-        client_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)
-    );
-    if (res == -1) {
-        perror("connect");
-        close(client_sockfd);
-        exit(EXIT_FAILURE);
-    }
+char *get_timestamp(void) {
+    char *timestamp = malloc(GDMP_TIMESTAMP_MAX_LEN);
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    strftime(timestamp, sizeof(timestamp), CLIENT_TIMESTAMP_FORMAT, tm_info);
+    return timestamp;
 }
 
 /////////////////////////////////// SENDING ////////////////////////////////////
@@ -94,12 +122,9 @@ void connect_server(int client_sockfd) {
 /**
  * Sends a GDMP text message to the server.
  */
-void send_text_message(
-    UI ui, int client_sockfd, char *username, char *content
-) {
+void send_text_message(Client cli, char *username, char *content, char *timestamp) {
     // Create message
     GDMPMessage msg = GDMPNew(GDMP_TEXT_MESSAGE);
-    char *timestamp = get_timestamp();
 
     // Add headers to message
     GDMPAddHeader(msg, "Username", username);
@@ -110,20 +135,19 @@ void send_text_message(
     char *msg_str = GDMPStringify(msg);
 
     // Send string
-    ssize_t bytes_sent = send(client_sockfd, msg_str, strlen(msg_str), 0);
+    ssize_t bytes_sent = send(cli->sockfd, msg_str, strlen(msg_str), 0);
     if (bytes_sent == -1) {
         perror("send");
-        close(client_sockfd);
-        exit(EXIT_FAILURE);
+        return;
     }
 
-    // Log text message
+    // Display message
     char message[GDMP_MESSAGE_MAX_LEN];
     snprintf(
         message, GDMP_MESSAGE_MAX_LEN, 
         "[%s] %s: %s", timestamp, username, content
     );
-    UIDisplayMessage(ui, message);
+    UIDisplayMessage(cli->ui, message);
 
     free(msg_str);
     free(timestamp);
@@ -132,19 +156,6 @@ void send_text_message(
 /**
  * Sends a GDMP join message to the server.
  */
-void send_join_message(UI ui, int client_sockfd) {
+void send_join_message(Client cli) {
 
-}
-
-////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
-
-/**
- * Returns current timestamp.
- */
-char *get_timestamp(void) {
-    char *timestamp = malloc(GDMP_TIMESTAMP_MAX_LEN);
-    time_t now = time(NULL);
-    struct tm *tm_info = localtime(&now);
-    strftime(timestamp, sizeof(timestamp), "%H:%M", tm_info);
-    return timestamp;
 }

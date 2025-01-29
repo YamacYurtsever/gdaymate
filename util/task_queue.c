@@ -22,8 +22,8 @@ struct node {
 TaskQueue TaskQueueNew(void) {
     TaskQueue q = malloc(sizeof(struct task_queue));
     if (q == NULL) {
-		fprintf(stderr, "error: out of memory\n");
-		exit(EXIT_FAILURE);
+		perror("malloc");
+		return NULL;
 	}
 
     q->front = NULL;
@@ -55,8 +55,8 @@ void TaskQueueEnqueue(TaskQueue q, Task task) {
 
     struct node *new = malloc(sizeof(struct node));
     if (new == NULL) {
-		fprintf(stderr, "error: out of memory\n");
-		exit(EXIT_FAILURE);
+		perror("malloc");
+		return;
 	}
 
     new->task = task;

@@ -23,14 +23,14 @@ ThreadPool ThreadPoolNew(int thread_count) {
     ThreadPool pool = malloc(sizeof(*pool));
     if (pool == NULL) {
         perror("malloc");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     pool->task_queue = TaskQueueNew();
     if (pool->task_queue == NULL) {
         free(pool->threads);
         free(pool);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     pool->thread_count = thread_count;
@@ -39,7 +39,7 @@ ThreadPool ThreadPoolNew(int thread_count) {
     if (pool->threads == NULL) {
         perror("malloc");
         free(pool);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     pool->shutdown = false;
@@ -49,7 +49,11 @@ ThreadPool ThreadPoolNew(int thread_count) {
 
     // Create worker threads
     for (int i = 0; i < pool->thread_count; i++) {
-        pthread_create(&pool->threads[i], NULL, ThreadPoolWorker, pool);
+        int res = pthread_create(&pool->threads[i], NULL, ThreadPoolWorker, pool);
+        if (res != 0) {
+            perror("pthread_create");
+            return NULL;
+        }
     }
 
     return pool;

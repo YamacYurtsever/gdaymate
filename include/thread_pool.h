@@ -15,6 +15,7 @@ typedef struct thread_pool *ThreadPool;
 
 /**
  * Creates a new thread pool.
+ * Returns NULL on error.
  */
 ThreadPool ThreadPoolNew(int thread_count); 
 

@@ -3,148 +3,171 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <signal.h>
 #include <poll.h>
 #include <errno.h>
 
 #include "gdmp.h"
 #include "thread_pool.h"
 
-#define PORT 8080
-#define BACKLOG 5
-#define THREAD_COUNT 5
-#define CLIENTS_MAX_COUNT 1024
+struct server {
+    ThreadPool pool;
+    int sockfd;
+    struct pollfd *poll_set;
+    int poll_count;
+};
 
-int server_sockfd;
-ThreadPool pool;
-struct pollfd poll_fds[CLIENTS_MAX_COUNT];
-int client_count = 1;
+int setup_server(Server srv);
+void check_poll_set(Server srv);
+int get_client(Server srv);
+void add_client(Server srv, int client_sockfd);
+void recv_client(Server srv, int poll_idx);
 
-int create_server(void);
-void start_server(void);
-void stop_server(int signal);
-void loop_server(void);
+void process_message(Server srv, GDMPMessage msg);
+void process_text_message(Server srv, GDMPMessage msg);
+void process_join_message(Server srv, GDMPMessage msg);
 
-int get_client(void);
-void add_client(int client_sockfd);
-void recv_client(int client_sockfd);
+////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
-void process_message(GDMPMessage msg);
-void process_text_message(GDMPMessage msg);
-void process_join_message(GDMPMessage msg);
+Server ServerNew(void) {
+    Server srv = malloc(sizeof(struct server));
+    if (srv == NULL) {
+        perror("malloc");
+        return NULL;
+    }
 
-//////////////////////////////// SERVER LOGIC //////////////////////////////////
+    srv->pool = ThreadPoolNew(SERVER_THREAD_COUNT);
+    if (srv->pool == NULL) {
+        perror("ThreadPoolNew");
+        free(srv);
+        return NULL;
+    }
 
-int main(void) {
-    // Create a TCP server
-    server_sockfd = create_server();
+    srv->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (srv->sockfd == -1) {
+        perror("socket");
+        ThreadPoolFree(srv->pool);
+        free(srv);
+        return NULL;
+    }
 
-    // Create a thread pool
-    pool = ThreadPoolNew(THREAD_COUNT);
+    srv->poll_set = malloc(sizeof(struct pollfd) * SERVER_MAX_POLL_COUNT);
+    if (srv->poll_set == NULL) {
+        perror("malloc");
+        close(srv->sockfd);
+        ThreadPoolFree(srv->pool);
+        free(srv);
+        return NULL;
+    }
 
-    // Setup SIGINT handler
-    signal(SIGINT, stop_server);
+    srv->poll_count = 0;
 
-    // Start server (listen for connections)
-    start_server();
+    int res = setup_server(srv);
+    if (res == -1) {
+        perror("setup_server");
+        free(srv->poll_set);
+        close(srv->sockfd);
+        ThreadPoolFree(srv->pool);
+        free(srv);
+        return NULL;
+    }
 
-    // Server loop
-    loop_server();
+    return srv;
+}
+
+void ServerFree(Server srv) {
+    free(srv->poll_set);
+    close(srv->sockfd);
+    ThreadPoolFree(srv->pool);
+    free(srv);
+}
+
+void ServerStart(Server srv) {
+    // Start listening for incoming connections
+    int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
+    if (res == -1) {
+        perror("listen");
+        return;
+    }
+
+    printf("Server listening on port %d...\n", SERVER_PORT);
+
+    while (1) {
+        // Wait until at least one socket is ready
+        int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
+        if (res == -1) {
+            perror("poll");
+            return;
+        }
+
+        // Check all sockets in poll set
+        check_poll_set(srv);
+    }
+}
+
+void ServerStop(Server srv) {
+    printf("Server shutting down...\n");
+
+    for (int i = 0; i < srv->poll_count; i++) {
+        close(srv->poll_set[i].fd);
+    }
+}
+
+////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
+
+/**
+ * Defines server socket address, binds server socket to server socket address,
+ * enables server socket reuse, and adds server socket to poll set.
+ * Returns 0 on success, and -1 on error.
+ */
+int setup_server(Server srv) {
+    // Define server socket address
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_addr.s_addr = INADDR_ANY;     
+
+    // Bind server socket to server socket address
+    int res = bind(srv->sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (res == -1) {
+        perror("bind");
+        return -1;
+    }
+
+    // Enable server socket reuse (to prevent already in use error)
+    int reuse_addr = 1;
+    res = setsockopt(srv->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
+    if (res == -1) {
+        perror("setsockopt");
+        return -1;
+    }
+
+    // Add server socket to poll set
+    srv->poll_set[0].fd = srv->sockfd;
+    srv->poll_set[0].events = POLLIN;
+    srv->poll_count++;
 
     return 0;
 }
 
 /**
- * Creates a new TCP server socket, defines server socket address,
- * binds the socket to the socket address, and returns the file descriptor.
+ * Checks the poll set for ready sockets.
+ * If the socket is a server, accepts new client connection.
+ * If the socket is a client, creates a task to receive message from the client,
+ * and adds the task to the server's thread pool's task queue.
  */
-int create_server(void) {
-    // Create socket
-    int server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_sockfd == -1) {
-        perror("socket");
-        exit(EXIT_FAILURE);
-    }
-
-    // Set reuse address (to prevent already in use error)
-    int reuse_addr = 1;
-    if (setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)) == -1) {
-        perror("setsockopt");
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-    // Define server socket address
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = INADDR_ANY;     
-
-    // Bind socket to socket address
-    int res = bind(
-        server_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)
-    );
-    if (res == -1) {
-        perror("bind");
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
-    }
-
-    // Add socket to poll set
-    poll_fds[0].fd = server_sockfd;
-    poll_fds[0].events = POLLIN;
-
-    return server_sockfd;
-}
-
-/**
- * Starts a server, making it listen for incoming connections.
- */
-void start_server(void) {
-    int res = listen(server_sockfd, BACKLOG);
-    if (res == -1) {
-        perror("listen");
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
-    }
-    printf("Server listening on port %d...\n", PORT);
-}
-
-/**
- * Stops a server.
- */
-void stop_server(int signal) {
-    printf("Server shutting down...\n");
-
-    for (int i = 0; i < client_count; i++) {
-        close(poll_fds[i].fd);
-    }
-
-    ThreadPoolFree(pool);
-    exit(EXIT_SUCCESS);
-}
-
-void loop_server(void) {
-    while (1) {
-        // Wait until at least one socket is ready
-        int res = poll(poll_fds, client_count, -1);
-        if (res == -1) {
-            perror("poll");
-            exit(EXIT_FAILURE);
-        }
-
-        for (int i = 0; i < client_count; i++) {
-            if (poll_fds[i].revents & POLLIN) {
-                if (poll_fds[i].fd == server_sockfd) {
-                    // Accept a connection (get a client)
-                    int client_sockfd = get_client();
-                    add_client(client_sockfd);
-                } else {
-                    // Create a task to handle client and add it to task queue
-                    int client_sockfd = poll_fds[i].fd;
-                    Task task = TaskNew(recv_client, client_sockfd);
-                    ThreadPoolAddTask(pool, task);
-                }
+void check_poll_set(Server srv) {
+    for (int i = 0; i < srv->poll_count; i++) {
+        if (srv->poll_set[i].revents & POLLIN) {
+            if (srv->poll_set[i].fd == srv->sockfd) {
+                // Accept a connection
+                int client_sockfd = get_client(srv);
+                if (client_sockfd == -1) return;
+                add_client(srv, client_sockfd);
+            } else {
+                // Create a task to receive message
+                Task task = TaskNew(recv_client, srv, i);
+                if (task == NULL) return;
+                ThreadPoolAddTask(srv->pool, task);
             }
         }
     }
@@ -152,19 +175,22 @@ void loop_server(void) {
 
 /**
  * Accepts a new client connection on the given server socket,
- * and returns the client's socket file descriptor.
+ * and returns the client's socket file descriptor, or -1 on error.
  */
-int get_client(void) {
+int get_client(Server srv) {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
     int client_sockfd = accept(
-        server_sockfd, (struct sockaddr *)&client_addr, &client_len
+        srv->sockfd, (struct sockaddr *)&client_addr, &client_len
     );
     if (client_sockfd == -1) {
         perror("accept");
-        close(server_sockfd);
-        exit(EXIT_FAILURE);
+        return -1;
+    }
+
+    if (SERVER_DEBUG_MODE) {
+        printf("Connecting client: %d\n", client_sockfd);
     }
 
     return client_sockfd;
@@ -173,22 +199,23 @@ int get_client(void) {
 /**
  * Adds a client to the poll set.
  */
-void add_client(int client_sockfd) {
-    if (client_count >= CLIENTS_MAX_COUNT) {
-        fprintf(stderr, "Error: CLIENTS_MAX_COUNT\n");
+void add_client(Server srv, int client_sockfd) {
+    if (srv->poll_count >= SERVER_MAX_POLL_COUNT) {
+        fprintf(stderr, "Error: SERVER_MAX_POLL_COUNT\n");
         close(client_sockfd);
         return;
     }
 
-    poll_fds[client_count].fd = client_sockfd;
-    poll_fds[client_count].events = POLLIN;
-    client_count++;
+    srv->poll_set[srv->poll_count].fd = client_sockfd;
+    srv->poll_set[srv->poll_count].events = POLLIN;
+    srv->poll_count++;
 }
 
 /**
  * Receives GDMP messages from a client, and sends them to processing.
  */
-void recv_client(int client_sockfd) {
+void recv_client(Server srv, int poll_idx) {
+    int client_sockfd = srv->poll_set[poll_idx].fd;
     char msg_str[GDMP_MESSAGE_MAX_LEN];
     ssize_t res;
 
@@ -202,32 +229,42 @@ void recv_client(int client_sockfd) {
         // TODO: Validate message (GDMPValidate)
 
         // Process message
-        process_message(msg);
+        process_message(srv, msg);
+    }
+
+    if (res == 0) {
+        close(client_sockfd);
+        srv->poll_set[poll_idx] = srv->poll_set[srv->poll_count - 1];
+        srv->poll_count--;
+
+        if (SERVER_DEBUG_MODE) {
+            printf("Disconnecting client: %d\n", client_sockfd);
+        }
     }
 
     if (res < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN)) {
         perror("recv");
-        close(client_sockfd);
-        exit(EXIT_FAILURE);
+        return;
     }
 }
 
-///////////////////////////////// PROCESSING ///////////////////////////////////
+////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
 /**
- * Gets the type of the GDMP message, and sends it to the appropriate processor.
+ * Gets the type of the GDMP message, 
+ * and sends it to the appropriate function for processing.
  */
-void process_message(GDMPMessage msg) {
+void process_message(Server srv, GDMPMessage msg) {
     MessageType type = GDMPGetType(msg);
     switch (type) {
         case GDMP_TEXT_MESSAGE:
-            process_text_message(msg);
+            process_text_message(srv, msg);
             break;
         case GDMP_JOIN_MESSAGE:
-            process_join_message(msg);
+            process_join_message(srv, msg);
             break; 
         case GDMP_ERROR_MESSAGE:
-            printf("Error: GDMP_ERROR_MESSAGE\n");
+            printf("GDMP_ERROR_MESSAGE\n");
             break;
     }
 }
@@ -235,7 +272,7 @@ void process_message(GDMPMessage msg) {
 /**
  * Processes a GDMP text message.
  */
-void process_text_message(GDMPMessage msg) {
+void process_text_message(Server srv, GDMPMessage msg) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
@@ -250,6 +287,6 @@ void process_text_message(GDMPMessage msg) {
 /**
  * Processes a GDMP join message.
  */
-void process_join_message(GDMPMessage msg) {
+void process_join_message(Server srv, GDMPMessage msg) {
     
 }

@@ -16,6 +16,7 @@ typedef struct task_queue *TaskQueue;
 
 /**
  * Creates a new task queue.
+ * Returns NULL on error.
  */
 TaskQueue TaskQueueNew(void); 
 
