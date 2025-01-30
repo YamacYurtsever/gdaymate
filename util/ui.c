@@ -6,16 +6,11 @@
 #include "ui.h"
 #include "gdmp.h"
 
-#define INPUT_BOX_HEIGHT 3
-#define INPUT_BOX_WIDTH COLS
-#define INPUT_BOX_START_Y (LINES - INPUT_BOX_HEIGHT)
-#define INPUT_BOX_START_X 0
-#define MESSAGE_BOX_HEIGHT (LINES - INPUT_BOX_HEIGHT)
-
 struct ui {
+    WINDOW *input_win;
+    WINDOW *message_win;
     char **messages;
     int message_count;
-    WINDOW *input_win;
 };
 
 void scroll_messages(UI ui);
@@ -27,11 +22,18 @@ UI UINew(void) {
     initscr();
     UI ui = malloc(sizeof(*ui));
 
-    ui->messages = malloc(MESSAGE_BOX_HEIGHT * sizeof(char *));
-    ui->message_count = 0;
     ui->input_win = NULL;
+    ui->message_win = newwin(
+        UI_MESSAGE_WIN_HEIGHT, 
+        UI_MESSAGE_WIN_WIDTH, 
+        UI_MESSAGE_WIN_START_Y, 
+        UI_MESSAGE_WIN_START_X
+    );
 
-    for (int i = 0; i < MESSAGE_BOX_HEIGHT; i++) {
+    ui->messages = malloc(UI_MESSAGE_WIN_HEIGHT * sizeof(char *));
+    ui->message_count = 0;
+
+    for (int i = 0; i < UI_MESSAGE_WIN_HEIGHT; i++) {
         ui->messages[i] = malloc(GDMP_MESSAGE_MAX_LEN * sizeof(char));
     }
 
@@ -39,7 +41,7 @@ UI UINew(void) {
 }
 
 void UIFree(UI ui) {
-    for (int i = 0; i < MESSAGE_BOX_HEIGHT; i++) {
+    for (int i = 0; i < UI_MESSAGE_WIN_HEIGHT; i++) {
         free(ui->messages[i]);
     }
 
@@ -51,8 +53,8 @@ void UIFree(UI ui) {
 
 void UIDisplayMessage(UI ui, char *message) {
     // Scroll messages (if overflows)
-    if (ui->message_count >= MESSAGE_BOX_HEIGHT) {
-        ui->message_count = MESSAGE_BOX_HEIGHT - 1;
+    if (ui->message_count >= UI_MESSAGE_WIN_HEIGHT) {
+        ui->message_count = UI_MESSAGE_WIN_HEIGHT - 1;
         scroll_messages(ui);
     }
 
@@ -65,14 +67,14 @@ void UIDisplayMessage(UI ui, char *message) {
     print_messages(ui);
 }
 
-void UIDisplayInputBox(UI ui, char *prompt, char *input, size_t input_size) {
+void UIDisplayInput(UI ui, char *prompt, char *input, size_t input_size) {
     // Initialize a new window
     if (ui->input_win == NULL) {
         ui->input_win = newwin(
-            INPUT_BOX_HEIGHT, 
-            INPUT_BOX_WIDTH, 
-            INPUT_BOX_START_Y, 
-            INPUT_BOX_START_X
+            UI_INPUT_WIN_HEIGHT, 
+            UI_INPUT_WIN_WIDTH, 
+            UI_INPUT_WIN_START_Y, 
+            UI_INPUT_WIN_START_X
         );
     }
 
@@ -94,7 +96,7 @@ void UIDisplayInputBox(UI ui, char *prompt, char *input, size_t input_size) {
  * Scrolls all messages, shifting them up in the messages array.
  */
 void scroll_messages(UI ui) {
-    for (int i = 0; i < MESSAGE_BOX_HEIGHT - 1; i++) {
+    for (int i = 0; i < UI_MESSAGE_WIN_HEIGHT - 1; i++) {
         strncpy(ui->messages[i], ui->messages[i + 1], GDMP_MESSAGE_MAX_LEN - 1);
         ui->messages[i][GDMP_MESSAGE_MAX_LEN - 1] = '\0';
     }

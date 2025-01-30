@@ -136,6 +136,14 @@ int ServerStart(Server srv) {
  * Returns -1 on error.
  */
 int setup_server(Server srv) {
+    // Enable server socket reuse (to prevent already in use error)
+    int reuse_addr = 1;
+    int res = setsockopt(srv->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
+    if (res == -1) {
+        perror("setsockopt");
+        return -1;
+    }
+
     // Define server socket address
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
@@ -143,17 +151,9 @@ int setup_server(Server srv) {
     server_addr.sin_addr.s_addr = INADDR_ANY;     
 
     // Bind server socket to server socket address
-    int res = bind(srv->sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    res = bind(srv->sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     if (res == -1) {
         perror("bind");
-        return -1;
-    }
-
-    // Enable server socket reuse (to prevent already in use error)
-    int reuse_addr = 1;
-    res = setsockopt(srv->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
-    if (res == -1) {
-        perror("setsockopt");
         return -1;
     }
 

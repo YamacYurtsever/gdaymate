@@ -62,12 +62,12 @@ void ClientFree(Client cli) {
 int ClientStart(Client cli) {
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
-    UIDisplayInputBox(cli->ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
+    UIDisplayInput(cli->ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
 
     while (1) {
         // Get content
         char content[GDMP_CONTENT_MAX_LEN];
-        UIDisplayInputBox(cli->ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
+        UIDisplayInput(cli->ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
 
         // Get timestamp
         char *timestamp = get_timestamp();
