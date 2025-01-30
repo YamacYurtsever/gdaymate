@@ -12,16 +12,13 @@
 #include "server.h"
 
 typedef struct task *Task;
+typedef struct task_arg *TaskArg;
 
 /**
  * Creates a new task.
  * Returns NULL on error.
  */
-Task TaskNew(
-    void (*function)(Server srv, int client_sockfd), 
-    Server srv, 
-    int client_sockfd
-);
+Task TaskNew(void (*function)(void *arg), void *arg);
 
 /**
  * Frees a task.

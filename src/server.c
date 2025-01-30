@@ -6,7 +6,6 @@
 #include <poll.h>
 #include <errno.h>
 #include <pthread.h>
-#include <fcntl.h>
 
 #include "gdmp.h"
 #include "thread_pool.h"
@@ -19,12 +18,17 @@ struct server {
     pthread_mutex_t lock;
 };
 
+struct receive_message_arg {
+    Server srv;
+    int client_sockfd;
+};
+
 int setup_server(Server srv);
 int check_poll_set(Server srv);
 int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
 int remove_client(Server srv, int client_sockfd);
-void receive_message(Server srv, int client_sockfd);
+void receive_message(void *arg);
 
 void process_message(Server srv, GDMPMessage msg);
 void process_text_message(Server srv, GDMPMessage msg);
@@ -191,7 +195,8 @@ int check_poll_set(Server srv) {
                 }
             } else {
                 // Create a task to receive message
-                Task task = TaskNew(receive_message, srv, poll_sockfd);
+                struct receive_message_arg arg = { srv, poll_sockfd };
+                Task task = TaskNew(receive_message, &arg);
                 if (task == NULL) {
                     fprintf(stderr, "TaskNew: error\n");
                     return -1;
@@ -279,20 +284,16 @@ int remove_client(Server srv, int client_sockfd) {
 /**
  * Receives a GDMP message from the client, and sends it to processing.
  */
-void receive_message(Server srv, int client_sockfd) {
-    char msg_str[GDMP_MESSAGE_MAX_LEN];
-
-    // TEMP: Check if client socket is closed
-    if (fcntl(client_sockfd, F_GETFD) == -1) {
-        return;
-    }
+void receive_message(void *arg) {
+    struct receive_message_arg *msg_arg = (struct receive_message_arg *)arg;
+    Server srv = msg_arg->srv;
+    int client_sockfd = msg_arg->client_sockfd;
 
     // Receive string
-    ssize_t bytes_read = recv(
-        client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT
-    );
+    char msg_str[GDMP_MESSAGE_MAX_LEN];
+    ssize_t bytes_read = recv(client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT);
 
-    while (bytes_read > 0) {
+    if (bytes_read > 0) {
         msg_str[bytes_read] = '\0';
 
         // Parse string (get message)
@@ -305,13 +306,8 @@ void receive_message(Server srv, int client_sockfd) {
 
         // Free message
         GDMPFree(msg);
-
-        // Receive next string
-        bytes_read = recv(
-            client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT
-        );
     }
-
+    
     if (bytes_read == 0) {
         int res = remove_client(srv, client_sockfd);
         if (res == -1) {
@@ -325,7 +321,7 @@ void receive_message(Server srv, int client_sockfd) {
             printf("Disconnecting client: %d\n", client_sockfd);
         }
     }
-
+    
     if (bytes_read < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN)) {
         perror("recv");
         return;

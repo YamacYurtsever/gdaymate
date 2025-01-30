@@ -6,33 +6,27 @@
 #include "task.h"
 
 struct task {
-    void (*function)(Server srv, int client_sockfd);
-    Server srv;
-    int client_sockfd;
+    void (*function)(void *arg);
+    void *arg;
 };
 
-Task TaskNew(
-    void (*function)(Server srv, int client_sockfd), 
-    Server srv, 
-    int client_sockfd
-) {
-    Task task = malloc(sizeof(*task));
+Task TaskNew(void (*function)(void *arg), void *arg) {
+    Task task = malloc(sizeof(struct task));
     if (task == NULL) {
         perror("malloc");
         return NULL;
     }
 
     task->function = function;
-    task->srv = srv;
-    task->client_sockfd = client_sockfd;
+    task->arg = arg;
 
     return task;
 }
 
-void TaskExecute(Task task) {
-    task->function(task->srv, task->client_sockfd);
-}
-
 void TaskFree(Task task) {
     free(task);
+}
+
+void TaskExecute(Task task) {
+    task->function(task->arg);
 }
