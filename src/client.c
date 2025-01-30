@@ -88,9 +88,8 @@ int ClientStart(Client cli) {
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
 /**
- * Defines server socket address, 
- * connects client socket to server socket address.
- * Returns 0 on success, and -1 on error.
+ * Defines server socket address, connects client to server.
+ * Returns -1 on error.
  */
 int setup_client(Client cli) {
     // Define server socket address
@@ -112,7 +111,7 @@ int setup_client(Client cli) {
 }
 
 /**
- * Gets current timestamp.
+ * Returns current timestamp.
  */
 char *get_timestamp(void) {
     char *timestamp = malloc(GDMP_TIMESTAMP_MAX_LEN);

@@ -24,7 +24,7 @@ int check_poll_set(Server srv);
 int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
 int remove_client(Server srv, int client_sockfd);
-void recv_client(Server srv, int client_sockfd);
+void receive_message(Server srv, int client_sockfd);
 
 void process_message(Server srv, GDMPMessage msg);
 void process_text_message(Server srv, GDMPMessage msg);
@@ -133,7 +133,7 @@ int ServerStart(Server srv) {
 /**
  * Defines server socket address, binds server socket to server socket address,
  * enables server socket reuse, and adds server socket to poll set.
- * Returns 0 on success, and -1 on error.
+ * Returns -1 on error.
  */
 int setup_server(Server srv) {
     // Define server socket address
@@ -167,9 +167,8 @@ int setup_server(Server srv) {
 
 /**
  * Checks the poll set for ready sockets.
- * If the socket is a server, accepts new client connection.
- * If the socket is a client, creates a task to receive message from the client,
- * and adds the task to the server's thread pool's task queue.
+ * If the socket is a server, accepts a connection.
+ * If the socket is a client, creates a task to receive message. 
  * Returns -1 on error.
  */
 int check_poll_set(Server srv) {
@@ -192,13 +191,11 @@ int check_poll_set(Server srv) {
                 }
             } else {
                 // Create a task to receive message
-                Task task = TaskNew(recv_client, srv, poll_sockfd);
+                Task task = TaskNew(receive_message, srv, poll_sockfd);
                 if (task == NULL) {
                     fprintf(stderr, "TaskNew: error\n");
                     return -1;
                 }
-
-                // printf("Task created to handle poll_idx: %d", i); // DEBUG
 
                 // Add it to the task queue
                 ThreadPoolAddTask(srv->pool, task);
@@ -254,7 +251,7 @@ int add_client(Server srv, int client_sockfd) {
 }
 
 /**
- * Removes a client from the poll set.
+ * Removes a client from the poll set. Returns -1 on error.
  */
 int remove_client(Server srv, int client_sockfd) {
     int poll_idx = -1;
@@ -280,12 +277,12 @@ int remove_client(Server srv, int client_sockfd) {
 }
 
 /**
- * Receives GDMP messages from a client, and sends them to processing.
+ * Receives a GDMP message from the client, and sends it to processing.
  */
-void recv_client(Server srv, int client_sockfd) {
+void receive_message(Server srv, int client_sockfd) {
     char msg_str[GDMP_MESSAGE_MAX_LEN];
 
-    // Check if client socket is closed
+    // TEMP: Check if client socket is closed
     if (fcntl(client_sockfd, F_GETFD) == -1) {
         return;
     }
