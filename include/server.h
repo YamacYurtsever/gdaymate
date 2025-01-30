@@ -7,6 +7,7 @@
 #define SERVER_MAX_POLL_COUNT 1024
 #define SERVER_POLL_TIMEOUT -1
 #define SERVER_DEBUG_MODE 1
+#define SERVER_MULTITHREADED_MODE 1
 
 typedef struct server *Server;
 

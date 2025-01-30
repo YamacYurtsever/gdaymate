@@ -194,21 +194,25 @@ int check_poll_set(Server srv) {
                     return -1;
                 }
             } else {
-                // Create a task to receive message
                 struct receive_message_arg *arg = malloc(sizeof(struct receive_message_arg));
                 arg->srv = srv;
                 arg->client_sockfd = poll_sockfd;
 
-                Task task = TaskNew(receive_message, arg);
-                if (task == NULL) {
-                    fprintf(stderr, "TaskNew: error\n");
-                    return -1;
+                if (SERVER_MULTITHREADED_MODE) {
+                    // Create a task to receive message
+                    Task task = TaskNew(receive_message, arg);
+                    if (task == NULL) {
+                        fprintf(stderr, "TaskNew: error\n");
+                        return -1;
+                    }
+
+                    // Add it to the task queue
+                    ThreadPoolAddTask(srv->pool, task);
+
+                    // TODO: Disable client
+                } else {
+                    receive_message(arg);
                 }
-
-                // Add it to the task queue
-                ThreadPoolAddTask(srv->pool, task);
-
-                // TODO: Disable client
             }
         }
     }
