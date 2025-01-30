@@ -198,21 +198,22 @@ int check_poll_set(Server srv) {
                 arg->srv = srv;
                 arg->client_sockfd = poll_sockfd;
 
-                if (SERVER_MULTITHREADED_MODE) {
-                    // Create a task to receive message
-                    Task task = TaskNew(receive_message, arg);
-                    if (task == NULL) {
-                        fprintf(stderr, "TaskNew: error\n");
-                        return -1;
-                    }
-
-                    // Add it to the task queue
-                    ThreadPoolAddTask(srv->pool, task);
-
-                    // TODO: Disable client
-                } else {
+                if (SERVER_SINGLETHREADED_MODE) {
                     receive_message(arg);
+                    return 0;
                 }
+
+                // Create a task to receive message
+                Task task = TaskNew(receive_message, arg);
+                if (task == NULL) {
+                    fprintf(stderr, "TaskNew: error\n");
+                    return -1;
+                }
+
+                // Add it to the task queue
+                ThreadPoolAddTask(srv->pool, task);
+
+                // TODO: Disable client
             }
         }
     }
