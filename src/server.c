@@ -195,8 +195,11 @@ int check_poll_set(Server srv) {
                 }
             } else {
                 // Create a task to receive message
-                struct receive_message_arg arg = { srv, poll_sockfd };
-                Task task = TaskNew(receive_message, &arg);
+                struct receive_message_arg *arg = malloc(sizeof(struct receive_message_arg));
+                arg->srv = srv;
+                arg->client_sockfd = poll_sockfd;
+
+                Task task = TaskNew(receive_message, arg);
                 if (task == NULL) {
                     fprintf(stderr, "TaskNew: error\n");
                     return -1;
@@ -204,6 +207,8 @@ int check_poll_set(Server srv) {
 
                 // Add it to the task queue
                 ThreadPoolAddTask(srv->pool, task);
+
+                // TODO: Disable client
             }
         }
     }
@@ -241,7 +246,7 @@ int add_client(Server srv, int client_sockfd) {
     pthread_mutex_lock(&srv->lock);
 
     if (srv->poll_count >= SERVER_MAX_POLL_COUNT) {
-        fprintf(stderr, "add_client: SERVER_MAX_POLL_COUNT\n");
+        pthread_mutex_unlock(&srv->lock);
         close(client_sockfd);
         return -1;
     }
@@ -259,23 +264,23 @@ int add_client(Server srv, int client_sockfd) {
  * Removes a client from the poll set. Returns -1 on error.
  */
 int remove_client(Server srv, int client_sockfd) {
-    int poll_idx = -1;
+    pthread_mutex_lock(&srv->lock);
 
+    int poll_idx = -1;
     for (int i = 0; i < srv->poll_count; i++) {
-        if (srv->poll_set[i].fd == client_sockfd) {
+        if (srv->poll_set[i].fd == client_sockfd || srv->poll_set[i].fd == -client_sockfd) {
             poll_idx = i;
             break;
         }
     }
 
     if (poll_idx == -1) {
-        fprintf(stderr, "remove_client: client socket not found in poll set\n");
         return -1;
     }
 
-    pthread_mutex_lock(&srv->lock);
     srv->poll_set[poll_idx] = srv->poll_set[srv->poll_count - 1];
     srv->poll_count--;
+
     pthread_mutex_unlock(&srv->lock);
 
     return 0;
@@ -306,12 +311,13 @@ void receive_message(void *arg) {
 
         // Free message
         GDMPFree(msg);
+
     }
     
     if (bytes_read == 0) {
         int res = remove_client(srv, client_sockfd);
         if (res == -1) {
-            fprintf(stderr, "remove_client: error");
+            fprintf(stderr, "remove_client: error\n");
             return;
         }
 
@@ -326,6 +332,8 @@ void receive_message(void *arg) {
         perror("recv");
         return;
     }
+
+    // TODO: Enable client
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
