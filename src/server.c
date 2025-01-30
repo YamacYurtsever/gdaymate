@@ -303,6 +303,9 @@ void receive_message(Server srv, int client_sockfd) {
         // Process message
         process_message(srv, msg);
 
+        // Free message
+        GDMPFree(msg);
+
         // Receive next string
         bytes_read = recv(
             client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT

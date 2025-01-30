@@ -157,6 +157,7 @@ int send_text_message(Client cli, char *username, char *content, char *timestamp
 
     free(timestamp);
     free(msg_str);
+    GDMPFree(msg);
     return 0;
 }
 
