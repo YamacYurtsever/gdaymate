@@ -4,12 +4,12 @@
 
 #include "multi_server.h"
 
-Server srv;
+MultiServer srv;
 
 void handle_sigint(int signal);
 
 int main(void) {
-    srv = ServerNew();
+    srv = MultiServerNew();
     if (srv == NULL) {
         fprintf(stderr, "ServerNew: error\n");
         exit(EXIT_FAILURE);
@@ -17,10 +17,10 @@ int main(void) {
 
     signal(SIGINT, handle_sigint);
 
-    int res = ServerStart(srv);
+    int res = MultiServerStart(srv);
     if (res == -1) {
         fprintf(stderr, "ServerStart: error\n");
-        ServerFree(srv);
+        MultiServerFree(srv);
         exit(EXIT_FAILURE);
     }
 
@@ -28,6 +28,6 @@ int main(void) {
 }
 
 void handle_sigint(int signal) {
-    ServerFree(srv);
+    MultiServerFree(srv);
     exit(EXIT_SUCCESS);
 }

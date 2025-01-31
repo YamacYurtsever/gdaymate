@@ -10,11 +10,10 @@
 #include <stdatomic.h>
 
 #include "multi_server.h"
-#include "server_process.h"
 #include "gdmp.h"
 #include "thread_pool.h"
 
-struct server {
+struct multi_server {
     ThreadPool pool;
     int sockfd;
     struct pollfd *poll_set;
@@ -24,23 +23,23 @@ struct server {
 };
 
 struct receive_message_arg {
-    Server srv;
+    MultiServer srv;
     int client_sockfd;
 };
 
-int setup_server(Server srv);
-int start_server(Server srv);
-void free_server(Server srv);
-int check_poll_set(Server srv);
-int get_client(Server srv);
-int add_client(Server srv, int client_sockfd);
-int remove_client(Server srv, int client_sockfd);
+int setup_server(MultiServer srv);
+int start_server(MultiServer srv);
+void free_server(MultiServer srv);
+int check_poll_set(MultiServer srv);
+int get_client(MultiServer srv);
+int add_client(MultiServer srv, int client_sockfd);
+int remove_client(MultiServer srv, int client_sockfd);
 void receive_message(void *arg);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
-Server ServerNew(void) {
-    Server srv = malloc(sizeof(struct server));
+MultiServer MultiServerNew(void) {
+    MultiServer srv = malloc(sizeof(struct multi_server));
     if (srv == NULL) {
         perror("malloc");
         return NULL;
@@ -79,11 +78,11 @@ Server ServerNew(void) {
     return srv;
 }
 
-void ServerFree(Server srv) {
+void MultiServerFree(MultiServer srv) {
     atomic_store(&srv->shutdown, true);
 }
 
-int ServerStart(Server srv) {
+int MultiServerStart(MultiServer srv) {
     int res = setup_server(srv);
     if (res == -1) {
         fprintf(stderr, "setup_server: error\n");
@@ -105,7 +104,7 @@ int ServerStart(Server srv) {
  * Defines server socket address, binds server socket to server socket address,
  * and adds server socket to poll set. Returns -1 on error.
  */
-int setup_server(Server srv) {
+int setup_server(MultiServer srv) {
     // Enable server socket reuse (to prevent already in use error)
     int reuse_addr = 1;
     int res = setsockopt(srv->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
@@ -136,9 +135,9 @@ int setup_server(Server srv) {
 }
 
 /**
- * Starts the server loop.
+ * Starts server loop. Returns -1 on error.
  */
-int start_server(Server srv) {
+int start_server(MultiServer srv) {
     printf("Server listening on port %d...\n", MULTI_SERVER_PORT);
 
     // Start listening for incoming connections
@@ -176,9 +175,9 @@ int start_server(Server srv) {
 }
 
 /**
- * Frees a server.
+ * Frees server.
  */
-void free_server(Server srv) {
+void free_server(MultiServer srv) {
     pthread_mutex_lock(&srv->lock);
 
     for (int i = 1; i < srv->poll_count; i++) {
@@ -201,14 +200,13 @@ void free_server(Server srv) {
  * If the socket is a client, creates a task to receive message. 
  * Returns -1 on error.
  */
-int check_poll_set(Server srv) {
+int check_poll_set(MultiServer srv) {
     pthread_mutex_lock(&srv->lock);
 
     for (int i = 0; i < srv->poll_count; i++) {
         if (srv->poll_set[i].revents & POLLIN) {
             int poll_sockfd = srv->poll_set[i].fd;
             pthread_mutex_unlock(&srv->lock);
-
             if (poll_sockfd == srv->sockfd) {
                 // Accept a connection (get a client)
                 int client_sockfd = get_client(srv);
@@ -231,11 +229,11 @@ int check_poll_set(Server srv) {
                     return - 1;
                 }
 
+                // Create a task to receive message
                 struct receive_message_arg *arg = malloc(sizeof(struct receive_message_arg));
                 arg->srv = srv;
                 arg->client_sockfd = poll_sockfd;
 
-                // Create a task to receive message
                 Task task = TaskNew(receive_message, arg);
                 if (task == NULL) {
                     fprintf(stderr, "TaskNew: error\n");
@@ -258,7 +256,7 @@ int check_poll_set(Server srv) {
  * Accepts a new client connection on the given server socket,
  * and returns the client's socket file descriptor, or -1 on error.
  */
-int get_client(Server srv) {
+int get_client(MultiServer srv) {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
@@ -280,7 +278,7 @@ int get_client(Server srv) {
 /**
  * Adds a client to the poll set. Returns -1 on error.
  */
-int add_client(Server srv, int client_sockfd) {
+int add_client(MultiServer srv, int client_sockfd) {
     pthread_mutex_lock(&srv->lock);
 
     if (srv->poll_count >= MULTI_SERVER_MAX_POLL_COUNT) {
@@ -301,7 +299,7 @@ int add_client(Server srv, int client_sockfd) {
 /**
  * Removes a client from the poll set. Returns -1 on error.
  */
-int remove_client(Server srv, int client_sockfd) {
+int remove_client(MultiServer srv, int client_sockfd) {
     pthread_mutex_lock(&srv->lock);
 
     int poll_idx = -1;
@@ -330,7 +328,7 @@ int remove_client(Server srv, int client_sockfd) {
  */
 void receive_message(void *arg) {
     struct receive_message_arg *msg_arg = (struct receive_message_arg *)arg;
-    Server srv = msg_arg->srv;
+    MultiServer srv = msg_arg->srv;
     int client_sockfd = msg_arg->client_sockfd;
 
     // Receive string
@@ -353,13 +351,18 @@ void receive_message(void *arg) {
 
     msg_str[bytes_read] = '\0';
 
-    // Parse string (get message)
+    // Parse string
     GDMPMessage msg = GDMPParse(msg_str);
 
-    // TODO: Validate message (GDMPValidate)
+    // TODO: Validate message
 
-    // Process message
-    process_message(srv, msg);
+    // TODO: Process message
+    if (GDMPGetType(msg) == GDMP_TEXT_MESSAGE) {
+        char *username = GDMPGetValue(msg, "Username");
+        char *content = GDMPGetValue(msg, "Content");
+        char *timestamp = GDMPGetValue(msg, "Timestamp");
+        printf("[%s] %s: %s\n", timestamp, username, content);
+    }
 
     // Free message
     GDMPFree(msg);

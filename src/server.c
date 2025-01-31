@@ -118,7 +118,7 @@ int setup_server(Server srv) {
 }
 
 /**
- * Starts the server loop.
+ * Starts server loop. Returns -1 on error.
  */
 int start_server(Server srv) {
     printf("Server listening on port %d...\n", SERVER_PORT);

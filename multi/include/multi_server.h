@@ -8,21 +8,21 @@
 #define MULTI_SERVER_POLL_TIMEOUT 0
 #define MULTI_SERVER_DEBUG_MODE 1
 
-typedef struct server *Server;
+typedef struct multi_server *MultiServer;
 
 /**
  * Creates a server. Returns NULL on error.
  */
-Server ServerNew(void);
+MultiServer MultiServerNew(void);
 
 /**
  * Frees a server.
  */
-void ServerFree(Server srv);
+void MultiServerFree(MultiServer srv);
 
 /**
  * Starts a server. Returns -1 on error.
  */
-int ServerStart(Server srv);
+int MultiServerStart(MultiServer srv);
 
 #endif
