@@ -20,7 +20,7 @@ int main(void) {
     int res = ServerStart(srv);
     if (res == -1) {
         fprintf(stderr, "ServerStart: error\n");
-        ServerFree(srv);
+        ServerStop(srv);
         exit(EXIT_FAILURE);
     }
 
