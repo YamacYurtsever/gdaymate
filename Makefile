@@ -11,16 +11,16 @@ BIN_DIR = bin
 
 # Files
 SERVER_FILES = $(SRC_DIR)/run_server.c $(SRC_DIR)/server.c
+MULTI_SERVER_FILES = $(MULTI_DIR)/src/run_multi_server.c $(MULTI_DIR)/src/multi_server.c
 CLIENT_FILES = $(SRC_DIR)/run_client.c $(SRC_DIR)/client.c
 UTIL_FILES = $(wildcard $(UTIL_DIR)/*.c)
-MULTI_SERVER_FILES = $(MULTI_DIR)/src/run_multi_server.c $(MULTI_DIR)/src/multi_server.c
 MULTI_UTIL_FILES = $(wildcard $(MULTI_DIR)/util/*.c)
 TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
 
 # Targets
 SERVER_TARGET = $(BIN_DIR)/run_server
-CLIENT_TARGET = $(BIN_DIR)/run_client
 MULTI_SERVER_TARGET = $(BIN_DIR)/run_multi_server
+CLIENT_TARGET = $(BIN_DIR)/run_client
 TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
 
 ########################################################################
@@ -33,11 +33,11 @@ $(SERVER_TARGET): $(SERVER_FILES) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(CLIENT_TARGET): $(CLIENT_FILES) $(UTIL_FILES)
+$(MULTI_SERVER_TARGET): $(MULTI_SERVER_FILES) $(UTIL_FILES) $(MULTI_UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(MULTI_SERVER_TARGET): $(MULTI_SERVER_FILES) $(UTIL_FILES) $(MULTI_UTIL_FILES)
+$(CLIENT_TARGET): $(CLIENT_FILES) $(UTIL_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $^ -o $@
 
