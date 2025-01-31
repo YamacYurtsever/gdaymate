@@ -7,6 +7,7 @@
 #include <errno.h>
 
 #include "server.h"
+#include "server_process.h"
 #include "gdmp.h"
 
 struct server {
@@ -22,10 +23,6 @@ int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
 int remove_client(Server srv, int client_sockfd);
 void receive_message(Server srv, int client_sockfd);
-
-void process_message(Server srv, GDMPMessage msg);
-void process_text_message(Server srv, GDMPMessage msg);
-void process_join_message(Server srv, GDMPMessage msg);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -72,14 +69,12 @@ int ServerStart(Server srv) {
     int res = setup_server(srv);
     if (res == -1) {
         fprintf(stderr, "setup_server: error\n");
-        ServerFree(srv);
         return -1;
     }
 
     res = start_server(srv);
     if (res == -1) {
         fprintf(stderr, "start_server: error\n");
-        ServerFree(srv);
         return -1;
     }
 
@@ -282,47 +277,4 @@ void receive_message(Server srv, int client_sockfd) {
 
     // Free message
     GDMPFree(msg);
-}
-
-////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
-
-/**
- * Gets the type of the GDMP message, 
- * and sends it to the appropriate function for processing.
- */
-void process_message(Server srv, GDMPMessage msg) {
-    MessageType type = GDMPGetType(msg);
-    switch (type) {
-        case GDMP_TEXT_MESSAGE:
-            process_text_message(srv, msg);
-            break;
-        case GDMP_JOIN_MESSAGE:
-            process_join_message(srv, msg);
-            break; 
-        case GDMP_ERROR_MESSAGE:
-            fprintf(stderr, "GDMP_ERROR_MESSAGE\n");
-            break;
-    }
-}
-
-/**
- * Processes a GDMP text message.
- */
-void process_text_message(Server srv, GDMPMessage msg) {
-    // Access headers
-    char *username = GDMPGetValue(msg, "Username");
-    char *content = GDMPGetValue(msg, "Content");
-    char *timestamp = GDMPGetValue(msg, "Timestamp");
-
-    // Log content
-    printf("[%s] %s: %s\n", timestamp, username, content);
-
-    // TODO: Broadcast to other clients
-}
-
-/**
- * Processes a GDMP join message.
- */
-void process_join_message(Server srv, GDMPMessage msg) {
-    
 }
