@@ -15,11 +15,6 @@ struct server {
     int poll_count;
 };
 
-struct receive_message_arg {
-    Server srv;
-    int client_sockfd;
-};
-
 int setup_server(Server srv);
 int check_poll_set(Server srv);
 int get_client(Server srv);
