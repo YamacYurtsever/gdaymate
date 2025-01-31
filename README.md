@@ -7,62 +7,84 @@
 ### Server Logic
 
 1. Create a TCP server
-	- Create a socket 
-	- Define server socket address
-	- Bind the socket to the socket address
-2. Create a thread pool
-3. Start the server (listen for connections)
-4. Setup SIGINT handler
-5. Server loop
-	- Accept a connection (get a client)
-	- Create a task to handle the client
-	- Add the task to the thread pool's task queue
+	- Create a socket
+	- Create a poll set
+	- Setup the server
+		- Define the server socket address
+		- Bind server socket to server socket address
+		- Add server socket to poll set
+1. Start the server
+	- Start listening for incoming connections
+	- Start server loop
+2. Stop the server (on SIGINT)
+	- Close all sockets
+	- Free the poll set
+	
 
-##### Handling the client
- 
-1. Receive the string
-2. Parse the string (get the message)
-3. Validate the message
-4. Send the message to processing (according to type)
+##### Server loop
 
-##### Processing
+1. Wait until at least one socket is ready
+2. Check all sockets in poll set
+	- If the socket is the server
+		- Accept a connection (get a client)
+		- Add it to the poll set
+	- If the socket is a client
+		- Receive the string
+		- Parse the string
+		- Validate the message
+		- Process the message
+		- Free the message
+		  
+##### Process Message
 
-- GDMP_TEXT_MESSAGE
+- Process Text Message
 	1. Access the headers
 	2. Log the content
 	3. Broadcast to other clients
-- GDMP_JOIN_MESSAGE
+- Process Join Message
+
+##### Multithreading
+
+The server has a *multithreaded*  version using a thread pool, working as displayed in the following diagram
 
 ---
 
 ### Client Logic
 
 1. Create a TCP client
+	- Create a user interface
 	- Create a socket
-2. Connect to server
-	- Define server socket address
-	- Connect socket to server socket address
-3. Create a user interface
-4. Get username
-5. Client loop
-	- Get content
-	- Send text message
+	- Setup the client
+		- Define server socket address
+		- Connect client socket to server socket address
+1. Start the client
+	- Get the username
+	- Start client loop
+2. Stop the client (on SIGINT)
+	- Close the socket
+	- Free the user interface
 
-##### Sending
+##### Client Loop
 
-- GDMP_TEXT_MESSAGE
+1. Get the content
+2. Get the timestamp
+3. Send the text message
+
+##### Send Message
+
+- Send Text Message
 	1. Create a message
-	2. Add the headers to the message
+	2. Add headers to the message
 	3. Serialize the message
 	4. Send the string
-	5. Log text message
-- GDMP_JOIN_MESSAGE
+	5. Display the message
+- Send Join Message
 
 ---
 
 ### Custom Protocol
 
-**Gdaymate Protocol (GDMP)** is a custom network protocol that operates at *the application layer* of the OSI model defining the structure of messages in Gdaymate
+**Gdaymate Protocol (GDMP)** is a custom network protocol that operates at the *application layer* of the OSI model defining the structure of messages in Gdaymate
 
 ##### GDMP Messages
 
@@ -97,12 +119,9 @@ Timestamp: 14:18
 Client user interface is built using the `ncurses` library
 
 - Display Message
-	1. Scroll the messages (if overflows)
-	2. Form the message
-	3. Copy the message to messages
-	4. Print the messages
-- Display Input Box
-	1. Initialize a new window (on the bottom of the page)
-	2. Draw the input box
-	3. Display the prompt
-	4. Capture the input (into the buffer)
+	1. Scroll messages (if overflows)
+	2. Add message to messages
+	3. Print messages
+- Display Input
+	1. Print prompt
+	2. Capture input
