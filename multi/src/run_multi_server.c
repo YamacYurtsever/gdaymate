@@ -11,7 +11,7 @@ void handle_sigint(int signal);
 int main(void) {
     srv = MultiServerNew();
     if (srv == NULL) {
-        fprintf(stderr, "ServerNew: error\n");
+        fprintf(stderr, "MultiServerNew: error\n");
         exit(EXIT_FAILURE);
     }
 
@@ -19,7 +19,7 @@ int main(void) {
 
     int res = MultiServerStart(srv);
     if (res == -1) {
-        fprintf(stderr, "ServerStart: error\n");
+        fprintf(stderr, "MultiServerStart: error\n");
         MultiServerFree(srv);
         exit(EXIT_FAILURE);
     }
