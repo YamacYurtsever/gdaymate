@@ -28,6 +28,7 @@ struct receive_message_arg {
 };
 
 int setup_server(Server srv);
+int start_server(Server srv);
 void free_server(Server srv);
 int check_poll_set(Server srv);
 int get_client(Server srv);
@@ -78,60 +79,28 @@ Server ServerNew(void) {
 
     pthread_mutex_init(&srv->lock, NULL); 
 
-    int res = setup_server(srv);
-    if (res == -1) {
-        fprintf(stderr, "setup_server: error\n");
-        free(srv->poll_set);
-        close(srv->sockfd);
-        ThreadPoolFree(srv->pool);
-        free(srv);
-        return NULL;
-    }
-
     return srv;
 }
 
 void ServerFree(Server srv) {
-    printf("Server shutting down...\n");
     atomic_store(&srv->shutdown, true);
 }
 
 int ServerStart(Server srv) {
-    // Start listening for incoming connections
-    int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
+    int res = setup_server(srv);
     if (res == -1) {
-        perror("listen");
-        return -1;
+        fprintf(stderr, "setup_server: error\n");
+        free_server(srv);
     }
 
-    printf("Server listening on port %d...\n", SERVER_PORT);
-
-    while (1) {
-        if (atomic_load(&srv->shutdown)) {
-            break;
-        }
-
-        pthread_mutex_lock(&srv->lock);
-        // Count the number of ready sockets
-        int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
-        if (res == -1) {
-            perror("poll");
-            return -1;
-        }
-        pthread_mutex_unlock(&srv->lock);
-
-        if (res > 0) {
-            // Check all sockets in poll set
-            res = check_poll_set(srv);
-            if (res == -1) {
-                fprintf(stderr, "check_poll_set: error\n");
-                return -1;
-            }
-        }
+    res = start_server(srv);
+    if (res == -1) {
+        fprintf(stderr, "start_server: error\n");
+        free_server(srv);
+        return NULL;
     }
 
-    free_server(srv);
-    return 0;
+    return 0
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
@@ -168,6 +137,46 @@ int setup_server(Server srv) {
     srv->poll_count++;
 
     return 0;
+}
+
+/**
+ * Starts the server loop.
+ */
+int start_server(Server srv) {
+    printf("Server listening on port %d...\n", SERVER_PORT);
+
+    // Start listening for incoming connections
+    int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
+    if (res == -1) {
+        perror("listen");
+        return -1;
+    }
+
+    while (1) {
+        if (atomic_load(&srv->shutdown)) {
+            printf("Server shutting down...\n");
+            free_server(srv);
+            return 0;
+        }
+
+        pthread_mutex_lock(&srv->lock);
+        // Count the number of ready sockets
+        int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
+        if (res == -1) {
+            perror("poll");
+            return -1;
+        }
+        pthread_mutex_unlock(&srv->lock);
+
+        if (res > 0) {
+            // Check all sockets in poll set
+            res = check_poll_set(srv);
+            if (res == -1) {
+                fprintf(stderr, "check_poll_set: error\n");
+                return -1;
+            }
+        }
+    }
 }
 
 /**

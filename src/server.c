@@ -16,6 +16,7 @@ struct server {
 };
 
 int setup_server(Server srv);
+int start_server(Server srv);
 int check_poll_set(Server srv);
 int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
@@ -52,15 +53,6 @@ Server ServerNew(void) {
 
     srv->poll_count = 0;
 
-    int res = setup_server(srv);
-    if (res == -1) {
-        fprintf(stderr, "setup_server: error\n");
-        free(srv->poll_set);
-        close(srv->sockfd);
-        free(srv);
-        return NULL;
-    }
-
     return srv;
 }
 
@@ -77,29 +69,18 @@ void ServerFree(Server srv) {
 }
 
 int ServerStart(Server srv) {
-    // Start listening for incoming connections
-    int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
+    int res = setup_server(srv);
     if (res == -1) {
-        perror("listen");
+        fprintf(stderr, "setup_server: error\n");
+        ServerFree(srv);
         return -1;
     }
 
-    printf("Server listening on port %d...\n", SERVER_PORT);
-
-    while (1) {
-        // Wait until a socket is ready
-        int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
-        if (res == -1) {
-            perror("poll");
-            return -1;
-        }
-
-        // Check all sockets in poll set
-        res = check_poll_set(srv);
-        if (res == -1) {
-            fprintf(stderr, "check_poll_set: error\n");
-            return -1;
-        }
+    res = start_server(srv);
+    if (res == -1) {
+        fprintf(stderr, "start_server: error\n");
+        ServerFree(srv);
+        return -1;
     }
 
     return 0;
@@ -139,6 +120,36 @@ int setup_server(Server srv) {
     srv->poll_count++;
 
     return 0;
+}
+
+/**
+ * Starts the server loop.
+ */
+int start_server(Server srv) {
+    printf("Server listening on port %d...\n", SERVER_PORT);
+
+    // Start listening for incoming connections
+    int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
+    if (res == -1) {
+        perror("listen");
+        return -1;
+    }
+
+    while (1) {
+        // Wait until a socket is ready
+        int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
+        if (res == -1) {
+            perror("poll");
+            return -1;
+        }
+
+        // Check all sockets in poll set
+        res = check_poll_set(srv);
+        if (res == -1) {
+            fprintf(stderr, "check_poll_set: error\n");
+            return -1;
+        }
+    }
 }
 
 /**

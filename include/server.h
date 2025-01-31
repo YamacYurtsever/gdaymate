@@ -15,13 +15,13 @@ typedef struct server *Server;
 Server ServerNew(void);
 
 /**
- * Starts a server. Returns -1 on error.
- */
-int ServerStart(Server srv);
-
-/**
  * Frees a server.
  */
 void ServerFree(Server srv);
+
+/**
+ * Starts a server. Returns -1 on error.
+ */
+int ServerStart(Server srv);
 
 #endif
