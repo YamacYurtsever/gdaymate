@@ -75,6 +75,14 @@ MultiServer MultiServerNew(void) {
 
     pthread_mutex_init(&srv->lock, NULL); 
 
+    // Setup the server
+    int res = setup_server(srv);
+    if (res == -1) {
+        fprintf(stderr, "setup_server: error\n");
+        free_server(srv);
+        return NULL;
+    }
+
     return srv;
 }
 
@@ -83,16 +91,40 @@ void MultiServerFree(MultiServer srv) {
 }
 
 int MultiServerStart(MultiServer srv) {
-    int res = setup_server(srv);
+    // Start listening for incoming connections
+    int res = listen(srv->sockfd, MULTI_SERVER_MAX_BACKLOG);
     if (res == -1) {
-        fprintf(stderr, "setup_server: error\n");
+        perror("listen");
         return -1;
     }
 
-    res = start_server(srv);
-    if (res == -1) {
-        fprintf(stderr, "start_server: error\n");
-        return -1;
+    printf("Server listening on port %d...\n", MULTI_SERVER_PORT);
+
+    while (1) {
+        // Check shutdown flag
+        if (atomic_load(&srv->shutdown)) {
+            printf("Server shutting down...\n");
+            free_server(srv);
+            return 0;
+        }
+
+        // Wait until a socket is ready or timeout runs out
+        pthread_mutex_lock(&srv->lock);
+        int res = poll(srv->poll_set, srv->poll_count, MULTI_SERVER_POLL_TIMEOUT);
+        if (res == -1) {
+            perror("poll");
+            return -1;
+        }
+        pthread_mutex_unlock(&srv->lock);
+
+        if (res > 0) {
+            // Check all sockets in poll set
+            res = check_poll_set(srv);
+            if (res == -1) {
+                fprintf(stderr, "check_poll_set: error\n");
+                return -1;
+            }
+        }
     }
 
     return 0;
@@ -151,47 +183,6 @@ int setup_server(MultiServer srv) {
     srv->poll_count++;
 
     return 0;
-}
-
-/**
- * Listens for connections and starts server loop. Returns -1 on error.
- */
-int start_server(MultiServer srv) {
-    printf("Server listening on port %d...\n", MULTI_SERVER_PORT);
-
-    // Start listening for incoming connections
-    int res = listen(srv->sockfd, MULTI_SERVER_MAX_BACKLOG);
-    if (res == -1) {
-        perror("listen");
-        return -1;
-    }
-
-    while (1) {
-        // Check shutdown flag
-        if (atomic_load(&srv->shutdown)) {
-            printf("Server shutting down...\n");
-            free_server(srv);
-            return 0;
-        }
-
-        // Wait until a socket is ready or timeout runs out
-        pthread_mutex_lock(&srv->lock);
-        int res = poll(srv->poll_set, srv->poll_count, MULTI_SERVER_POLL_TIMEOUT);
-        if (res == -1) {
-            perror("poll");
-            return -1;
-        }
-        pthread_mutex_unlock(&srv->lock);
-
-        if (res > 0) {
-            // Check all sockets in poll set
-            res = check_poll_set(srv);
-            if (res == -1) {
-                fprintf(stderr, "check_poll_set: error\n");
-                return -1;
-            }
-        }
-    }
 }
 
 /**

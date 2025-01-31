@@ -38,15 +38,14 @@ Client ClientNew(void) {
         perror("socket");
         UIFree(cli->ui);
         free(cli);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
+    // Setup the client
     int res = setup_client(cli);
     if (res == -1) {
         fprintf(stderr, "setup_client: error\n");
-        close(cli->sockfd);
-        UIFree(cli->ui);
-        free(cli);
+        ClientFree(cli);
         return NULL;
     }
 
