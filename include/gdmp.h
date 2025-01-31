@@ -53,6 +53,7 @@ char *GDMPStringify(GDMPMessage msg);
 
 /**
  * Deserializes a string into a GDMP message.
+ * Assumes the given string is a valid GDMP message.
  */
 GDMPMessage GDMPParse(char *str);
 
