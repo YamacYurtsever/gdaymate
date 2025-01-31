@@ -5,9 +5,8 @@
 #define SERVER_THREAD_COUNT 5
 #define SERVER_MAX_BACKLOG 5
 #define SERVER_MAX_POLL_COUNT 1024
-#define SERVER_POLL_TIMEOUT -1
+#define SERVER_POLL_TIMEOUT 0
 #define SERVER_DEBUG_MODE 1
-#define SERVER_SINGLETHREADED_MODE 0
 
 typedef struct server *Server;
 
