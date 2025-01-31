@@ -21,8 +21,8 @@ Server ServerNew(void);
 int ServerStart(Server srv);
 
 /**
- * Stops and frees a server. Only use if the server has been started.
+ * Frees a server.
  */
-void ServerStop(Server srv);
+void ServerFree(Server srv);
 
 #endif

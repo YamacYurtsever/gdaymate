@@ -64,6 +64,18 @@ Server ServerNew(void) {
     return srv;
 }
 
+void ServerFree(Server srv) {
+    printf("Server shutting down...\n");
+
+    for (int i = 1; i < srv->poll_count; i++) {
+        close(srv->poll_set[i].fd);
+    }
+
+    free(srv->poll_set);
+    close(srv->sockfd);
+    free(srv);
+}
+
 int ServerStart(Server srv) {
     // Start listening for incoming connections
     int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
@@ -91,18 +103,6 @@ int ServerStart(Server srv) {
     }
 
     return 0;
-}
-
-void ServerStop(Server srv) {
-    printf("Server shutting down...\n");
-
-    for (int i = 1; i < srv->poll_count; i++) {
-        close(srv->poll_set[i].fd);
-    }
-
-    free(srv->poll_set);
-    close(srv->sockfd);
-    free(srv);
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////

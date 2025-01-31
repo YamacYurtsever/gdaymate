@@ -20,8 +20,8 @@ Server ServerNew(void);
 int ServerStart(Server srv);
 
 /**
- * Stops and frees a server.
+ * Frees a server.
  */
-void ServerStop(Server srv);
+void ServerFree(Server srv);
 
 #endif

@@ -91,6 +91,11 @@ Server ServerNew(void) {
     return srv;
 }
 
+void ServerFree(Server srv) {
+    printf("Server shutting down...\n");
+    atomic_store(&srv->shutdown, true);
+}
+
 int ServerStart(Server srv) {
     // Start listening for incoming connections
     int res = listen(srv->sockfd, SERVER_MAX_BACKLOG);
@@ -127,11 +132,6 @@ int ServerStart(Server srv) {
 
     free_server(srv);
     return 0;
-}
-
-void ServerStop(Server srv) {
-    printf("Server shutting down...\n");
-    atomic_store(&srv->shutdown, true);
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
