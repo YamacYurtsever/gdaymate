@@ -100,18 +100,11 @@ int MultiServerStart(MultiServer srv) {
 
     printf("Server listening on port %d...\n", MULTI_SERVER_PORT);
 
-    while (1) {
-        // Check shutdown flag
-        if (atomic_load(&srv->shutdown)) {
-            printf("Server shutting down...\n");
-            free_server(srv);
-            return 0;
-        }
-
+    while (!atomic_load(&srv->shutdown)) {
         // Wait until a socket is ready or timeout runs out
         pthread_mutex_lock(&srv->lock);
         int res = poll(srv->poll_set, srv->poll_count, MULTI_SERVER_POLL_TIMEOUT);
-        if (res == -1) {
+        if (res == -1 && errno != EINTR) {
             perror("poll");
             return -1;
         }
@@ -127,6 +120,9 @@ int MultiServerStart(MultiServer srv) {
         }
     }
 
+    printf("Server shutting down...\n");
+
+    free_server(srv);
     return 0;
 }
 
