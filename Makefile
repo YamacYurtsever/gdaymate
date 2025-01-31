@@ -10,7 +10,7 @@ TEST_DIR = test
 BIN_DIR = bin
 
 # Files
-SERVER_FILES = $(SRC_DIR)/run_server.c $(SRC_DIR)/server.c
+SERVER_FILES = $(SRC_DIR)/run_server.c $(SRC_DIR)/server.c $(SRC_DIR)/server_process.c
 MULTI_SERVER_FILES = $(MULTI_DIR)/src/run_multi_server.c $(MULTI_DIR)/src/multi_server.c
 CLIENT_FILES = $(SRC_DIR)/run_client.c $(SRC_DIR)/client.c
 UTIL_FILES = $(wildcard $(UTIL_DIR)/*.c)
