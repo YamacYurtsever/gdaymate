@@ -64,7 +64,7 @@ Server ServerNew(void) {
 void ServerFree(Server srv) {
     printf("Server shutting down...\n");
 
-    for (int i = 1; i < srv->poll_count; i++) {
+    for (int i = 0; i < srv->poll_count; i++) {
         close(srv->poll_set[i].fd);
     }
 
