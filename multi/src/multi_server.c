@@ -155,8 +155,8 @@ int start_server(Server srv) {
             return 0;
         }
 
-        pthread_mutex_lock(&srv->lock);
         // Count the number of ready sockets
+        pthread_mutex_lock(&srv->lock);
         int res = poll(srv->poll_set, srv->poll_count, MULTI_SERVER_POLL_TIMEOUT);
         if (res == -1) {
             perror("poll");
