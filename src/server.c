@@ -61,7 +61,6 @@ void ServerFree(Server srv) {
     }
 
     free(srv->poll_set);
-    close(srv->sockfd);
     free(srv);
 }
 
@@ -118,7 +117,7 @@ int setup_server(Server srv) {
 }
 
 /**
- * Starts server loop. Returns -1 on error.
+ * Listens for connections and starts server loop. Returns -1 on error.
  */
 int start_server(Server srv) {
     printf("Server listening on port %d...\n", SERVER_PORT);
@@ -148,32 +147,30 @@ int start_server(Server srv) {
 }
 
 /**
- * Checks the poll set for ready sockets.
+ * Checks the poll set for ready sockets. Returns -1 on error.
  * If the socket is a server, accepts a connection.
- * If the socket is a client, creates a task to receive message. 
- * Returns -1 on error.
+ * If the socket is a client, receives a message. 
  */
 int check_poll_set(Server srv) {
     for (int i = 0; i < srv->poll_count; i++) {
         if (srv->poll_set[i].revents & POLLIN) {
-            // If a client, recieve the message
-            if (srv->poll_set[i].fd != srv->sockfd) {
+            if (srv->poll_set[i].fd == srv->sockfd) {
+                // Accept a connection (get a client)
+                int client_sockfd = get_client(srv);
+                if (client_sockfd == -1) {
+                    fprintf(stderr, "get_client: error\n");
+                    return -1;
+                }
+
+                // Add client into poll set
+                int res = add_client(srv, client_sockfd);
+                if (res == -1) {
+                    fprintf(stderr, "add_client: error\n");
+                    return -1;
+                }
+            } else {
+                // Receive a message
                 receive_message(srv, srv->poll_set[i].fd);
-                continue;
-            }
-
-            // Accept a connection (get a client)
-            int client_sockfd = get_client(srv);
-            if (client_sockfd == -1) {
-                fprintf(stderr, "get_client: error\n");
-                return -1;
-            }
-
-            // Add client into poll set
-            int res = add_client(srv, client_sockfd);
-            if (res == -1) {
-                fprintf(stderr, "add_client: error\n");
-                return -1;
             }
         }
     }
@@ -243,7 +240,8 @@ int remove_client(Server srv, int client_sockfd) {
 }
 
 /**
- * Receives a GDMP message from the client, and sends it to processing.
+ * Receives a GDMP message from the client, parses it, validates it, 
+ * and sends it to processing.
  */
 void receive_message(Server srv, int client_sockfd) {
     // Receive string
