@@ -137,8 +137,8 @@ int start_server(Server srv) {
             return -1;
         }
 
-        // Check all sockets in poll set
         if (res > 0) {
+            // Check all sockets in poll set
             res = check_poll_set(srv);
             if (res == -1) {
                 fprintf(stderr, "check_poll_set: error\n");

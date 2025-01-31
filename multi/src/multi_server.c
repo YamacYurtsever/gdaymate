@@ -183,8 +183,8 @@ int start_server(MultiServer srv) {
         }
         pthread_mutex_unlock(&srv->lock);
 
-        // Check all sockets in poll set
         if (res > 0) {
+            // Check all sockets in poll set
             res = check_poll_set(srv);
             if (res == -1) {
                 fprintf(stderr, "check_poll_set: error\n");
