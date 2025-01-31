@@ -266,6 +266,5 @@ void receive_message(Server srv, int client_sockfd) {
     // Process message
     process_message(srv, msg);
 
-    // Free message
     GDMPFree(msg);
 }
