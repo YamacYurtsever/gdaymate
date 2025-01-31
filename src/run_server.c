@@ -28,6 +28,6 @@ int main(void) {
 }
 
 void handle_sigint(int signal) {
-    ServerFree(srv);
+    ServerStop(srv);
     exit(EXIT_SUCCESS);
 }

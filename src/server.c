@@ -90,10 +90,20 @@ Server ServerNew(void) {
 }
 
 void ServerFree(Server srv) {
-    printf("Server shutting down...\n");
+    pthread_mutex_lock(&srv->lock);
 
-    // Signal shutdown
-    atomic_store(&srv->shutdown, true);
+    for (int i = 1; i < srv->poll_count; i++) {
+        close(srv->poll_set[i].fd);
+    }
+
+    free(srv->poll_set);
+    close(srv->sockfd);
+    ThreadPoolFree(srv->pool);
+
+    pthread_mutex_unlock(&srv->lock);
+    pthread_mutex_destroy(&srv->lock);
+
+    free(srv);
 }
 
 int ServerStart(Server srv) {
@@ -130,23 +140,13 @@ int ServerStart(Server srv) {
         }
     }
 
-    // Shutdown server
-    pthread_mutex_lock(&srv->lock);
-
-    for (int i = 1; i < srv->poll_count; i++) {
-        close(srv->poll_set[i].fd);
-    }
-
-    free(srv->poll_set);
-    close(srv->sockfd);
-    ThreadPoolFree(srv->pool);
-
-    pthread_mutex_unlock(&srv->lock);
-    pthread_mutex_destroy(&srv->lock);
-
-    free(srv);
-
+    ServerFree(srv);
     return 0;
+}
+
+void ServerStop(Server srv) {
+    printf("Server shutting down...\n");
+    atomic_store(&srv->shutdown, true);
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////

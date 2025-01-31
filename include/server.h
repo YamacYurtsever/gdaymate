@@ -16,7 +16,7 @@ typedef struct server *Server;
 Server ServerNew(void);
 
 /**
- * Frees a server.
+ * Frees a server. Only use if the server hasn't been started.
  */
 void ServerFree(Server srv);
 
@@ -24,5 +24,10 @@ void ServerFree(Server srv);
  * Starts a server. Returns -1 on error.
  */
 int ServerStart(Server srv);
+
+/**
+ * Stops and frees a server. Only use if the server has been started.
+ */
+void ServerStop(Server srv);
 
 #endif
