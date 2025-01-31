@@ -107,18 +107,15 @@ int ServerStart(Server srv) {
     printf("Server listening on port %d...\n", SERVER_PORT);
 
     while (1) {
-        // Ensure shutdown is checked periodically to stop the loop
         if (atomic_load(&srv->shutdown)) {
-            pthread_mutex_unlock(&srv->lock);
             break;
         }
 
-        // Wait until at least one socket is ready
         pthread_mutex_lock(&srv->lock);
+        // Count the number of ready sockets
         int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
         if (res == -1) {
             perror("poll");
-            pthread_mutex_unlock(&srv->lock);
             return -1;
         }
         pthread_mutex_unlock(&srv->lock);
@@ -330,33 +327,32 @@ void receive_message(void *arg) {
     char msg_str[GDMP_MESSAGE_MAX_LEN];
     ssize_t bytes_read = recv(client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT);
 
-    if (bytes_read > 0) {
-        msg_str[bytes_read] = '\0';
-
-        // Parse string (get message)
-        GDMPMessage msg = GDMPParse(msg_str);
-
-        // TODO: Validate message (GDMPValidate)
-
-        // Process message
-        process_message(srv, msg);
-
-        // Free message
-        GDMPFree(msg);
-    }
-    
-    if (bytes_read == 0) {
-        close(client_sockfd);
-
-        if (SERVER_DEBUG_MODE) {
-            printf("Disconnecting client: %d\n", client_sockfd);
-        }
-    }
-    
     if (bytes_read < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN)) {
         perror("recv");
         return;
     }
+
+    if (bytes_read == 0) {
+        if (SERVER_DEBUG_MODE) {
+            printf("Disconnecting client: %d\n", client_sockfd);
+        }
+
+        close(client_sockfd);
+        return;
+    }
+
+    msg_str[bytes_read] = '\0';
+
+    // Parse string (get message)
+    GDMPMessage msg = GDMPParse(msg_str);
+
+    // TODO: Validate message (GDMPValidate)
+
+    // Process message
+    process_message(srv, msg);
+
+    // Free message
+    GDMPFree(msg);
 
     // Add client back into poll set
     int res = add_client(srv, client_sockfd);
