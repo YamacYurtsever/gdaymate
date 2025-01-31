@@ -11,17 +11,17 @@
 typedef struct multi_server *MultiServer;
 
 /**
- * Creates a server. Returns NULL on error.
+ * Creates a multithreaded server. Returns NULL on error.
  */
 MultiServer MultiServerNew(void);
 
 /**
- * Frees a server.
+ * Frees a multithreaded server.
  */
 void MultiServerFree(MultiServer srv);
 
 /**
- * Starts a server. Returns -1 on error.
+ * Starts a multithreaded server. Returns -1 on error.
  */
 int MultiServerStart(MultiServer srv);
 
