@@ -27,9 +27,8 @@ struct receive_message_arg {
     int client_sockfd;
 };
 
-void free_server(Server srv);
 int setup_server(Server srv);
-int start_server(Server srv);
+void free_server(Server srv);
 int check_poll_set(Server srv);
 int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
@@ -129,25 +128,6 @@ int ServerStart(Server srv) {
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
 /**
- * Frees server.
- */
-void free_server(Server srv) {
-    pthread_mutex_lock(&srv->lock);
-
-    for (int i = 0; i < srv->poll_count; i++) {
-        close(srv->poll_set[i].fd);
-    }
-
-    free(srv->poll_set);
-    ThreadPoolFree(srv->pool);
-
-    pthread_mutex_unlock(&srv->lock);
-    pthread_mutex_destroy(&srv->lock);
-
-    free(srv);
-}
-
-/**
  * Defines server socket address, binds server socket to server socket address,
  * and adds server socket to poll set. Returns -1 on error.
  */
@@ -179,6 +159,25 @@ int setup_server(Server srv) {
     srv->poll_count++;
 
     return 0;
+}
+
+/**
+ * Frees server.
+ */
+void free_server(Server srv) {
+    pthread_mutex_lock(&srv->lock);
+
+    for (int i = 0; i < srv->poll_count; i++) {
+        close(srv->poll_set[i].fd);
+    }
+
+    free(srv->poll_set);
+    ThreadPoolFree(srv->pool);
+
+    pthread_mutex_unlock(&srv->lock);
+    pthread_mutex_destroy(&srv->lock);
+
+    free(srv);
 }
 
 /**
