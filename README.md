@@ -1,5 +1,3 @@
-# Gdaymate
-
 **Gdaymate** is a simple CLI-based client-server messaging app
 
 ---
@@ -9,51 +7,60 @@
 1. Create a TCP server
 	- Create a socket
 	- Create a poll set
+	- Create a thread pool
 	- Setup the server
 		- Define the server socket address
 		- Bind server socket to server socket address
 		- Add server socket to poll set
-1. Start the server
+2. Start the server
 	- Start listening for incoming connections
 	- Start server loop
-2. Stop the server (on SIGINT)
-	- Close all sockets
-	- Free the poll set
+3. Stop the server (on SIGINT)
+	- Set the shutdown flag to true
 	
-
 ##### Server loop
 
-1. Wait until at least one socket is ready
+1. Wait until at least one socket is ready or timeout runs out
 2. Check all sockets in poll set
 	- If the socket is the server
 		- Accept a connection (get a client)
-		- Add it to the poll set
+		- Add client into the poll set
 	- If the socket is a client
-		- Receive the string
-		- Parse the string
-		- Validate the message
-		- Process the message
-		- Free the message
-		  
+		- Remove client from the poll set
+		- Create a task to receive the message
+		- Add task to the task queue (of the thread pool)
+3. End loop if the shutdown flag is true
+	- Free thread pool
+	- Close all sockets
+	- Free the poll set
+		
+##### Receive Message
+
+- Receive the string
+- Parse the string
+- Validate the message
+- Process the message
+- Add client back into the poll set
+
 ##### Process Message
 
 - Process Text Message
 	1. Access the headers
 	2. Log the content
 	3. Broadcast to other clients
-- Process Join Message
+- Process Join Message (TODO)
 
-##### Multithreading
+##### Diagram
 
-The server has a *multithreaded*  version using a thread pool, working as displayed in the following diagram
+<img src="images/server_diagram.png" width="300"/>
 
 ---
 
 ### Client Logic
 
 1. Create a TCP client
-	- Create a user interface
 	- Create a socket
+	- Create a user interface
 	- Setup the client
 		- Define server socket address
 		- Connect client socket to server socket address
@@ -67,8 +74,9 @@ The server has a *multithreaded*  version using a thread pool, working as displa
 ##### Client Loop
 
 1. Get the content
-2. Get the timestamp
-3. Send the text message
+2. Handle if command
+3. Get the timestamp
+4. Send the text message
 
 ##### Send Message
 
@@ -78,7 +86,11 @@ The server has a *multithreaded*  version using a thread pool, working as displa
 	3. Serialize the message
 	4. Send the string
 	5. Display the message
-- Send Join Message
+- Send Join Message (TODO)
+
+##### Custom Commands
+
+- `\exit`: Stop the client
 
 ---
 
@@ -88,7 +100,7 @@ The server has a *multithreaded*  version using a thread pool, working as displa
 
 ##### GDMP Messages
 
-**GDMP messages** start with a message type followed by the data
+**GDMP messages** begin with the message type followed by the message data
 
 ```
 GDMP_TEXT_MESSAGE
@@ -104,9 +116,9 @@ Timestamp: 14:18
 1. GDMP_TEXT_MESSAGE
 2. GDMP_JOIN_MESSAGE
 
-##### GDMP Data
+##### GDMP Message Data
 
-**GDMP data** is given in header-value pairs which are *case-sensitive* and *unordered*
+**GDMP message data** is given in header-value pairs which are *case-sensitive* and *unordered*
 
 - Username
 - Content
@@ -125,3 +137,14 @@ Client user interface is built using the `ncurses` library
 - Display Input
 	1. Print prompt
 	2. Capture input
+
+---
+
+### Future Ideas
+
+- Rooms
+- Authentication
+- Data Persistance
+- Data Analysis
+- Message Encryption
+- Multimedia Transmission
