@@ -52,7 +52,7 @@
 
 ##### Diagram
 
-<img src="images/server_diagram.png" width="300"/>
+<img src="images/server_diagram.png" width="450"/>
 
 ---
 
