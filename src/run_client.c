@@ -28,5 +28,4 @@ int main(void) {
 
 void handle_sigint(int signal) {
     ClientFree(cli);
-    exit(EXIT_SUCCESS);
 }

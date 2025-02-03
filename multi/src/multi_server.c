@@ -322,8 +322,11 @@ void receive_message(void *arg) {
     char msg_str[GDMP_MESSAGE_MAX_LEN];
     ssize_t bytes_read = recv(client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT);
 
-    if (bytes_read < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN)) {
-        perror("recv");
+    if (bytes_read < 0) {
+        if (!(errno == EWOULDBLOCK || errno == EAGAIN)) {
+            perror("recv");
+        }
+        
         return;
     }
 

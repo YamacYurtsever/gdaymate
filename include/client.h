@@ -4,6 +4,7 @@
 #define CLIENT_SERVER_IP "127.0.0.1"
 #define CLIENT_SERVER_PORT 8080
 #define CLIENT_TIMESTAMP_FORMAT "%H:%M"
+#define CLIENT_COMMAND_CHAR '/'
 
 typedef struct client *Client;
 

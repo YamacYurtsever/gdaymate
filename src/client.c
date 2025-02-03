@@ -16,6 +16,7 @@ struct client {
 };
 
 int setup_client(Client cli);
+void handle_command(Client cli, char *command);
 char *get_timestamp(void);
 
 int send_text_message(Client cli, char *username, char *content, char *timestamp);
@@ -27,16 +28,12 @@ Client ClientNew(void) {
     Client cli = malloc(sizeof(struct client));
     if (cli == NULL) {
         perror("malloc");
-        free(cli);
         return NULL;
     }
-
-    cli->ui = UINew();
 
     cli->sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (cli->sockfd == -1) {
         perror("socket");
-        UIFree(cli->ui);
         free(cli);
         return NULL;
     }
@@ -45,9 +42,12 @@ Client ClientNew(void) {
     int res = setup_client(cli);
     if (res == -1) {
         fprintf(stderr, "setup_client: error\n");
-        ClientFree(cli);
+        close(cli->sockfd);
+        free(cli);
         return NULL;
     }
+
+    cli->ui = UINew(); // Initialize UI after error messages are displayed
 
     return cli;
 }
@@ -56,6 +56,7 @@ void ClientFree(Client cli) {
     close(cli->sockfd);
     UIFree(cli->ui);
     free(cli);
+    exit(EXIT_SUCCESS);
 }
 
 int ClientStart(Client cli) {
@@ -67,6 +68,12 @@ int ClientStart(Client cli) {
         // Get content
         char content[GDMP_CONTENT_MAX_LEN];
         UIDisplayInput(cli->ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
+
+        // Handle if command
+        if (content[0] == CLIENT_COMMAND_CHAR) {
+            handle_command(cli, content);
+            continue;
+        }
 
         // Get timestamp
         char *timestamp = get_timestamp();
@@ -107,6 +114,17 @@ int setup_client(Client cli) {
     }
 
     return 0;
+}
+
+/**
+ * Handles the given command string.
+ */
+void handle_command(Client cli, char *command) {
+    if (strcmp(command, "/exit") == 0) {
+        ClientFree(cli);
+    } else {
+        UIDisplayMessage(cli->ui, "Invalid command");
+    }
 }
 
 /**
@@ -164,5 +182,6 @@ int send_text_message(Client cli, char *username, char *content, char *timestamp
  * Sends a GDMP join message to the server. Returns -1 on error.
  */
 int send_join_message(Client cli) {
+    // TODO
     return 0;
 }
