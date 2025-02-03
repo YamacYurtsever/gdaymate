@@ -11,8 +11,8 @@
 #include "ui.h"
 
 struct client {
-    UI ui;
     int sockfd;
+    UI ui;
 };
 
 int setup_client(Client cli);
@@ -47,14 +47,14 @@ Client ClientNew(void) {
         return NULL;
     }
 
-    cli->ui = UINew(); // Initialize UI after error messages are displayed
+    cli->ui = UINew();
 
     return cli;
 }
 
 void ClientFree(Client cli) {
-    close(cli->sockfd);
     UIFree(cli->ui);
+    close(cli->sockfd);
     free(cli);
     exit(EXIT_SUCCESS);
 }

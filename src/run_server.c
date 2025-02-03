@@ -29,5 +29,4 @@ int main(void) {
 
 void handle_sigint(int signal) {
     ServerFree(srv);
-    exit(EXIT_SUCCESS);
 }

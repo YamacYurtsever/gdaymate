@@ -5,24 +5,36 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <errno.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stdatomic.h>
 
 #include "server.h"
-#include "server_process.h"
 #include "gdmp.h"
+#include "thread_pool.h"
 
 struct server {
     int sockfd;
     struct pollfd *poll_set;
     int poll_count;
+    ThreadPool pool;
+    atomic_bool shutdown;
+    pthread_mutex_t lock;
 };
 
+struct receive_message_arg {
+    Server srv;
+    int client_sockfd;
+};
+
+void free_server(Server srv);
 int setup_server(Server srv);
 int start_server(Server srv);
 int check_poll_set(Server srv);
 int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
 int remove_client(Server srv, int client_sockfd);
-void receive_message(Server srv, int client_sockfd);
+void receive_message(void *arg);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -50,11 +62,24 @@ Server ServerNew(void) {
 
     srv->poll_count = 0;
 
+    srv->pool = ThreadPoolNew(SERVER_THREAD_COUNT);
+    if (srv->pool == NULL) {
+        fprintf(stderr, "ThreadPoolNew: error\n");
+        free(srv->poll_set);
+        close(srv->sockfd);
+        free(srv);
+        return NULL;
+    }
+
+    atomic_store(&srv->shutdown, false);
+
+    pthread_mutex_init(&srv->lock, NULL); 
+
     // Setup the server
     int res = setup_server(srv);
     if (res == -1) {
         fprintf(stderr, "setup_server: error\n");
-        ServerFree(srv);
+        free_server(srv);
         return NULL;
     }
 
@@ -62,14 +87,7 @@ Server ServerNew(void) {
 }
 
 void ServerFree(Server srv) {
-    printf("Server shutting down...\n");
-
-    for (int i = 0; i < srv->poll_count; i++) {
-        close(srv->poll_set[i].fd);
-    }
-
-    free(srv->poll_set);
-    free(srv);
+    atomic_store(&srv->shutdown, true);
 }
 
 int ServerStart(Server srv) {
@@ -82,13 +100,15 @@ int ServerStart(Server srv) {
 
     printf("Server listening on port %d...\n", SERVER_PORT);
 
-    while (1) {
-        // Wait until a socket is ready
+    while (!atomic_load(&srv->shutdown)) {
+        // Wait until a socket is ready or timeout runs out
+        pthread_mutex_lock(&srv->lock);
         int res = poll(srv->poll_set, srv->poll_count, SERVER_POLL_TIMEOUT);
-        if (res == -1) {
+        if (res == -1 && errno != EINTR) {
             perror("poll");
             return -1;
         }
+        pthread_mutex_unlock(&srv->lock);
 
         if (res > 0) {
             // Check all sockets in poll set
@@ -100,10 +120,32 @@ int ServerStart(Server srv) {
         }
     }
 
+    printf("Server shutting down...\n");
+
+    free_server(srv);
     return 0;
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
+
+/**
+ * Frees server.
+ */
+void free_server(Server srv) {
+    pthread_mutex_lock(&srv->lock);
+
+    for (int i = 0; i < srv->poll_count; i++) {
+        close(srv->poll_set[i].fd);
+    }
+
+    free(srv->poll_set);
+    ThreadPoolFree(srv->pool);
+
+    pthread_mutex_unlock(&srv->lock);
+    pthread_mutex_destroy(&srv->lock);
+
+    free(srv);
+}
 
 /**
  * Defines server socket address, binds server socket to server socket address,
@@ -142,11 +184,15 @@ int setup_server(Server srv) {
 /**
  * Checks the poll set for ready sockets. Returns -1 on error.
  * If the socket is a server, accepts a connection.
- * If the socket is a client, receives a message. 
+ * If the socket is a client, creates a task to receive message. 
  */
 int check_poll_set(Server srv) {
+    pthread_mutex_lock(&srv->lock);
+
     for (int i = 0; i < srv->poll_count; i++) {
         if (srv->poll_set[i].revents & POLLIN) {
+            pthread_mutex_unlock(&srv->lock);
+
             if (srv->poll_set[i].fd == srv->sockfd) {
                 // Accept a connection (get a client)
                 int client_sockfd = get_client(srv);
@@ -162,12 +208,33 @@ int check_poll_set(Server srv) {
                     return -1;
                 }
             } else {
-                // Receive a message
-                receive_message(srv, srv->poll_set[i].fd);
+                // Remove client from poll set
+                int res = remove_client(srv, srv->poll_set[i].fd);
+                if (res == -1) {
+                    fprintf(stderr, "remove_client: error\n");
+                    return - 1;
+                }
+
+                // Create a task to receive message
+                struct receive_message_arg *arg = malloc(sizeof(struct receive_message_arg));
+                arg->srv = srv;
+                arg->client_sockfd = srv->poll_set[i].fd;
+
+                Task task = TaskNew(receive_message, arg);
+                if (task == NULL) {
+                    fprintf(stderr, "TaskNew: error\n");
+                    return -1;
+                }
+
+                // Add task to task queue
+                ThreadPoolAddTask(srv->pool, task);
             }
+
+            pthread_mutex_lock(&srv->lock);
         }
     }
 
+    pthread_mutex_unlock(&srv->lock);
     return 0;
 }
 
@@ -198,7 +265,10 @@ int get_client(Server srv) {
  * Adds a client to the poll set. Returns -1 on error.
  */
 int add_client(Server srv, int client_sockfd) {
+    pthread_mutex_lock(&srv->lock);
+
     if (srv->poll_count >= SERVER_MAX_POLL_COUNT) {
+        pthread_mutex_unlock(&srv->lock);
         close(client_sockfd);
         return -1;
     }
@@ -207,6 +277,8 @@ int add_client(Server srv, int client_sockfd) {
     srv->poll_set[srv->poll_count].events = POLLIN;
     srv->poll_count++;
 
+    pthread_mutex_unlock(&srv->lock);
+
     return 0;
 }
 
@@ -214,6 +286,8 @@ int add_client(Server srv, int client_sockfd) {
  * Removes a client from the poll set. Returns -1 on error.
  */
 int remove_client(Server srv, int client_sockfd) {
+    pthread_mutex_lock(&srv->lock);
+
     int poll_idx = -1;
     for (int i = 0; i < srv->poll_count; i++) {
         if (srv->poll_set[i].fd == client_sockfd) {
@@ -223,20 +297,27 @@ int remove_client(Server srv, int client_sockfd) {
     }
 
     if (poll_idx == -1) {
+        pthread_mutex_unlock(&srv->lock);
         return -1;
     }
 
     srv->poll_set[poll_idx] = srv->poll_set[srv->poll_count - 1];
     srv->poll_count--;
 
+    pthread_mutex_unlock(&srv->lock);
+
     return 0;
 }
 
 /**
  * Receives a GDMP message from the client, parses it, validates it, 
- * and sends it to processing.
+ * and sends it to processing. Executed by treads in the thread pool.
  */
-void receive_message(Server srv, int client_sockfd) {
+void receive_message(void *arg) {
+    struct receive_message_arg *msg_arg = (struct receive_message_arg *)arg;
+    Server srv = msg_arg->srv;
+    int client_sockfd = msg_arg->client_sockfd;
+
     // Receive string
     char msg_str[GDMP_MESSAGE_MAX_LEN];
     ssize_t bytes_read = recv(client_sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, MSG_DONTWAIT);
@@ -245,7 +326,7 @@ void receive_message(Server srv, int client_sockfd) {
         if (!(errno == EWOULDBLOCK || errno == EAGAIN)) {
             perror("recv");
         }
-        
+
         return;
     }
 
@@ -254,7 +335,6 @@ void receive_message(Server srv, int client_sockfd) {
             printf("Disconnecting client: %d\n", client_sockfd);
         }
 
-        remove_client(srv, client_sockfd);
         close(client_sockfd);
         return;
     }
@@ -267,8 +347,20 @@ void receive_message(Server srv, int client_sockfd) {
     // Validate message
     if (!GDMPValidate(msg)) return;
 
-    // Process message
-    process_message(srv, msg);
+    // TODO: Process message
+    if (GDMPGetType(msg) == GDMP_TEXT_MESSAGE) {
+        char *username = GDMPGetValue(msg, "Username");
+        char *content = GDMPGetValue(msg, "Content");
+        char *timestamp = GDMPGetValue(msg, "Timestamp");
+        printf("[%s] %s: %s\n", timestamp, username, content);
+    }
+
+    // Add client back into poll set
+    int res = add_client(srv, client_sockfd);
+    if (res == -1) {
+        fprintf(stderr, "add_client: error\n");
+        return;
+    }
 
     GDMPFree(msg);
 }
