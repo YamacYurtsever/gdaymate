@@ -90,7 +90,8 @@
 
 ##### Custom Commands
 
-- `\exit`: Stop the client
+- `/exit`: Stop the client
+- `/clear`: Clear messages
 
 ---
 
