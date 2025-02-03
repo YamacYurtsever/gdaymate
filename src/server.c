@@ -261,7 +261,8 @@ void receive_message(Server srv, int client_sockfd) {
     // Parse string
     GDMPMessage msg = GDMPParse(msg_str);
 
-    // TODO: Validate message
+    // Validate message
+    if (!GDMPValidate(msg)) return;
 
     // Process message
     process_message(srv, msg);

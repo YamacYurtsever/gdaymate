@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "gdmp.h"
 #include "hash_table.h"
@@ -121,6 +122,17 @@ GDMPMessage GDMPParse(char *str) {
 
     free(str_copy);
     return msg;
+}
+
+bool GDMPValidate(GDMPMessage msg) {
+    char **headers = get_headers(msg->type);
+
+    for (int i = 0; i < GDMP_HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
+        char *value = GDMPGetValue(msg, headers[i]);
+        if (value == NULL) return false;
+    }   
+
+    return true;
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////

@@ -3,6 +3,8 @@
 #ifndef GDMP_H
 #define GDMP_H
 
+#include <stdbool.h>
+
 #define GDMP_MESSAGE_MAX_LEN 1024
 #define GDMP_HEADERS_MAX_COUNT 10
 #define GDMP_USERNAME_MAX_LEN 10
@@ -55,5 +57,11 @@ char *GDMPStringify(GDMPMessage msg);
  * Assumes the given string is a valid GDMP message.
  */
 GDMPMessage GDMPParse(char *str);
+
+/**
+ * Checks if a GDMP message's type and its headers match.
+ * Returns true for a valid message, and false otherwise.
+ */
+bool GDMPValidate(GDMPMessage msg);
 
 #endif

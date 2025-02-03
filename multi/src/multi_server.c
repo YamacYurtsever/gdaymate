@@ -341,7 +341,8 @@ void receive_message(void *arg) {
     // Parse string
     GDMPMessage msg = GDMPParse(msg_str);
 
-    // TODO: Validate message
+    // Validate message
+    if (!GDMPValidate(msg)) return;
 
     // TODO: Process message
     if (GDMPGetType(msg) == GDMP_TEXT_MESSAGE) {
@@ -351,13 +352,12 @@ void receive_message(void *arg) {
         printf("[%s] %s: %s\n", timestamp, username, content);
     }
 
-    // Free message
-    GDMPFree(msg);
-
     // Add client back into poll set
     int res = add_client(srv, client_sockfd);
     if (res == -1) {
         fprintf(stderr, "add_client: error\n");
         return;
     }
+
+    GDMPFree(msg);
 }
