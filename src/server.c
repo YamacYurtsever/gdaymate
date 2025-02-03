@@ -10,6 +10,7 @@
 #include <stdatomic.h>
 
 #include "server.h"
+#include "server_process.h"
 #include "gdmp.h"
 #include "thread_pool.h"
 
@@ -326,6 +327,7 @@ void receive_message(void *arg) {
             perror("recv");
         }
 
+        add_client(srv, client_sockfd);
         return;
     }
 
@@ -346,13 +348,8 @@ void receive_message(void *arg) {
     // Validate message
     if (!GDMPValidate(msg)) return;
 
-    // TODO: Process message
-    if (GDMPGetType(msg) == GDMP_TEXT_MESSAGE) {
-        char *username = GDMPGetValue(msg, "Username");
-        char *content = GDMPGetValue(msg, "Content");
-        char *timestamp = GDMPGetValue(msg, "Timestamp");
-        printf("[%s] %s: %s\n", timestamp, username, content);
-    }
+    // Process message
+    process_message(srv, msg);
 
     // Add client back into poll set
     int res = add_client(srv, client_sockfd);

@@ -122,6 +122,8 @@ int setup_client(Client cli) {
 void handle_command(Client cli, char *command) {
     if (strcmp(command, "/exit") == 0) {
         ClientFree(cli);
+    } else if (strcmp(command, "/clear") == 0) {
+        UIClearMessages(cli->ui);
     } else {
         UIDisplayMessage(cli->ui, "Invalid command");
     }

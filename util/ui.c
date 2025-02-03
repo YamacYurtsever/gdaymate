@@ -16,6 +16,7 @@ struct ui {
 };
 
 void scroll_messages(UI ui);
+void print_messages(UI ui);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -77,12 +78,7 @@ void UIDisplayMessage(UI ui, char *message) {
     ui->message_count++;
 
     // Print messages
-    werase(ui->message_win);
-    box(ui->message_win, 0, 0);
-    for (int i = 0; i < ui->message_count; i++) {
-        mvwprintw(ui->message_win, 1 + i, 1, "%s", ui->messages[i]);
-    }
-    wrefresh(ui->message_win);
+    print_messages(ui);
 }
 
 void UIDisplayInput(UI ui, char *prompt, char *input, size_t input_size) {
@@ -93,7 +89,18 @@ void UIDisplayInput(UI ui, char *prompt, char *input, size_t input_size) {
     wrefresh(ui->input_win);
 
     // Capture input
-    wgetnstr(ui->input_win, input, input_size - 1);
+    wgetnstr(ui->input_win, input, input_size - 1); 
+}
+
+void UIClearMessages(UI ui) {
+    // Clear messages
+    for (int i = 0; i < MESSAGE_MAX_COUNT; i++) {
+        ui->messages[i][i] = '\0';
+    }
+    ui->message_count = 0;
+
+    // Print messages
+    print_messages(ui);
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
@@ -106,4 +113,16 @@ void scroll_messages(UI ui) {
         strncpy(ui->messages[i], ui->messages[i + 1], GDMP_MESSAGE_MAX_LEN - 1);
         ui->messages[i][GDMP_MESSAGE_MAX_LEN - 1] = '\0';
     }
+}
+
+/**
+ * Prints all messages.
+ */
+void print_messages(UI ui) {
+    werase(ui->message_win);
+    box(ui->message_win, 0, 0);
+    for (int i = 0; i < ui->message_count; i++) {
+        mvwprintw(ui->message_win, 1 + i, 1, "%s", ui->messages[i]);
+    }
+    wrefresh(ui->message_win);
 }

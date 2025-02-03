@@ -36,4 +36,9 @@ void UIDisplayMessage(UI ui, char *message);
  */
 void UIDisplayInput(UI ui, char *prompt, char *buffer, size_t buffer_size);
 
+/**
+ * Clears all messages.
+ */
+void UIClearMessages(UI ui);
+
 #endif
