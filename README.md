@@ -36,11 +36,11 @@
 		
 ##### Receive Message
 
-- Receive the string
-- Parse the string
-- Validate the message
-- Process the message
-- Add client back into the poll set
+1. Receive the string
+2. Parse the string
+3. Validate the message
+4. Process the message
+5. Add client back into the poll set
 
 ##### Process Message
 
