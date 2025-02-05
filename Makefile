@@ -4,7 +4,6 @@ CFLAGS = -Wall -Wvla -Werror -Iinclude -Imulti/include -fsanitize=address -lncur
 
 # Directories
 SRC_DIR = src
-MULTI_DIR = multi
 UTIL_DIR = util
 TEST_DIR = test
 BIN_DIR = bin
