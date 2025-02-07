@@ -60,10 +60,6 @@ Client ClientNew(void) {
     return cli;
 }
 
-void ClientFree(Client cli) {
-    atomic_store(&cli->shutdown, true);
-}
-
 int ClientStart(Client cli) {
     // Start receive message thread;
     pthread_create(&cli->receive_message_thread, NULL, receive_message, cli);
@@ -154,7 +150,7 @@ void free_client(Client cli) {
 
         if (bytes_read == 0) {
             UIDisplayMessage(cli->ui, "Server disconnected");
-            ClientFree(cli);
+            atomic_store(&cli->shutdown, true);
             return NULL;
         }
 
@@ -190,7 +186,7 @@ void free_client(Client cli) {
  */
 void handle_command(Client cli, char *command) {
     if (strcmp(command, "/exit") == 0) {
-        ClientFree(cli);
+        atomic_store(&cli->shutdown, true);
     } else if (strcmp(command, "/clear") == 0) {
         UIClearMessages(cli->ui);
     } else {
