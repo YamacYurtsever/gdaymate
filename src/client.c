@@ -21,7 +21,7 @@ struct client {
 
 int setup_client(Client cli);
 void free_client(Client cli);
-void *receive_text_messages(void *arg);
+void *receive_messages(void *arg);
 void handle_command(Client cli, char *command);
 char *get_timestamp(void);
 
@@ -65,8 +65,8 @@ void ClientFree(Client cli) {
 }
 
 int ClientStart(Client cli) {
-    // Start a thread for receiving text messages from the server
-    pthread_create(&cli->thread, NULL, receive_text_messages, cli);
+    // Start receive message loop (on a seperate thread)
+    pthread_create(&cli->thread, NULL, receive_messages, cli);
 
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
@@ -136,10 +136,10 @@ void free_client(Client cli) {
 }
 
 /**
- * Receives GDMP text messages from the server, parses them, validates them, 
+ * Receives GDMP messages from the server, parses them, validates them, 
  * and displays them. Executed by a seperate thread.
  */
- void *receive_text_messages(void *arg) {
+ void *receive_messages(void *arg) {
     Client cli = (Client)arg;
 
     while (!atomic_load(&cli->shutdown)) {
