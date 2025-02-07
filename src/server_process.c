@@ -71,8 +71,6 @@ void process_join_message(Server srv, GDMPMessage msg, int client_sockfd) {
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
 void *send_text_message(void *arg) {
-    printf("I think I'm getting stuck daddy\n"); // DEBUG
-
     struct send_text_message_arg *msg_arg = (struct send_text_message_arg *)arg;
     GDMPMessage msg = msg_arg->msg;
     int client_sockfd = msg_arg->client_sockfd;
@@ -85,8 +83,6 @@ void *send_text_message(void *arg) {
     if (bytes_sent == -1 && !(errno == EWOULDBLOCK || errno == EAGAIN)) {
         perror("send");
     }
-
-    printf("I aint no longer stuck thanks daddy\n"); // DEBUG
 
     GDMPFree(msg);
     free(msg_str);
