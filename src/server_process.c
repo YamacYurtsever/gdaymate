@@ -1,21 +1,33 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/socket.h>
 
 #include "server_process.h"
 #include "server.h"
 #include "gdmp.h"
+#include "task.h"
+#include "thread_pool.h"
 
-/**
- * Gets the type of the GDMP message, 
- * and sends it to the appropriate function for processing.
- */
-void process_message(Server srv, GDMPMessage msg) {
+struct send_text_message_arg {
+    GDMPMessage msg;
+    int client_sockfd;
+};
+
+void send_text_message(void *arg);
+
+////////////////////////////////// FUNCTIONS ///////////////////////////////////
+
+void process_message(Server srv, GDMPMessage msg, int client_sockfd) {
     MessageType type = GDMPGetType(msg);
     switch (type) {
         case GDMP_TEXT_MESSAGE:
-            process_text_message(srv, msg);
+            process_text_message(srv, msg, client_sockfd);
             break;
         case GDMP_JOIN_MESSAGE:
-            process_join_message(srv, msg);
+            process_join_message(srv, msg, client_sockfd);
             break; 
         case GDMP_ERROR_MESSAGE:
             fprintf(stderr, "GDMP_ERROR_MESSAGE\n");
@@ -23,24 +35,61 @@ void process_message(Server srv, GDMPMessage msg) {
     }
 }
 
-/**
- * Processes a GDMP text message.
- */
-void process_text_message(Server srv, GDMPMessage msg) {
+void process_text_message(Server srv, GDMPMessage msg, int client_sockfd) {
     // Access headers
     char *username = GDMPGetValue(msg, "Username");
     char *content = GDMPGetValue(msg, "Content");
     char *timestamp = GDMPGetValue(msg, "Timestamp");
 
-    // Log content
+    // Log message
     printf("[%s] %s: %s\n", timestamp, username, content);
 
-    // TODO: Broadcast to other clients
+    // Broadcast to other clients
+    pthread_mutex_lock(&srv->lock);
+    for (int i = 0; i < srv->poll_count; i++) {
+        if (srv->poll_set[i].fd == srv->sockfd || 
+            srv->poll_set[i].fd == client_sockfd) {
+            continue;
+        }
+
+        // Create a task to send text message
+        struct send_text_message_arg *arg = malloc(sizeof(struct send_text_message_arg));
+        arg->msg = msg;
+        arg->client_sockfd = srv->poll_set[i].fd;
+        Task task = TaskNew(send_text_message, arg);
+
+        // Add task to task queue
+        ThreadPoolAddTask(srv->pool, task);
+    }
+    pthread_mutex_unlock(&srv->lock);
 }
 
-/**
- * Processes a GDMP join message.
- */
-void process_join_message(Server srv, GDMPMessage msg) {
-    
+void process_join_message(Server srv, GDMPMessage msg, int client_sockfd) {
+
+}
+
+////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
+
+void send_text_message(void *arg) {
+    struct send_text_message_arg *msg_arg = (struct send_text_message_arg *)arg;
+    GDMPMessage msg = msg_arg->msg;
+    int client_sockfd = msg_arg->client_sockfd;
+
+    // Serialize message
+    char *msg_str = GDMPStringify(msg);
+
+    // Send string
+    ssize_t bytes_sent = send(client_sockfd, msg_str, strlen(msg_str), MSG_DONTWAIT);
+    if (bytes_sent == -1) {
+        if (!(errno == EWOULDBLOCK || errno == EAGAIN)) {
+            perror("send");
+        }
+
+        free(msg_str);
+        free(msg_arg);
+        return;
+    }
+
+    free(msg_str);
+    free(msg_arg);
 }

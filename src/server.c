@@ -14,15 +14,6 @@
 #include "gdmp.h"
 #include "thread_pool.h"
 
-struct server {
-    int sockfd;
-    struct pollfd *poll_set;
-    int poll_count;
-    ThreadPool pool;
-    atomic_bool shutdown;
-    pthread_mutex_t lock;
-};
-
 struct receive_message_arg {
     Server srv;
     int client_sockfd;
@@ -219,12 +210,7 @@ int check_poll_set(Server srv) {
                 struct receive_message_arg *arg = malloc(sizeof(struct receive_message_arg));
                 arg->srv = srv;
                 arg->client_sockfd = srv->poll_set[i].fd;
-
                 Task task = TaskNew(receive_message, arg);
-                if (task == NULL) {
-                    fprintf(stderr, "TaskNew: error\n");
-                    return -1;
-                }
 
                 // Add task to task queue
                 ThreadPoolAddTask(srv->pool, task);
@@ -349,14 +335,11 @@ void receive_message(void *arg) {
     if (!GDMPValidate(msg)) return;
 
     // Process message
-    process_message(srv, msg);
+    process_message(srv, msg, client_sockfd);
 
     // Add client back into poll set
-    int res = add_client(srv, client_sockfd);
-    if (res == -1) {
-        fprintf(stderr, "add_client: error\n");
-        return;
-    }
+    add_client(srv, client_sockfd);
 
     GDMPFree(msg);
+    free(msg_arg);
 }
