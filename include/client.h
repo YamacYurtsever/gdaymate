@@ -14,6 +14,11 @@ typedef struct client *Client;
 Client ClientNew(void);
 
 /**
+ * Frees a client.
+ */
+void ClientFree(Client cli);
+
+/**
  * Starts a client. Returns -1 on error.
  */
 int ClientStart(Client cli);

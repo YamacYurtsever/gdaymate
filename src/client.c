@@ -60,6 +60,10 @@ Client ClientNew(void) {
     return cli;
 }
 
+void ClientFree(Client cli) {
+    atomic_store(&cli->shutdown, true);
+}
+
 int ClientStart(Client cli) {
     // Start a thread for receiving text messages from the server
     pthread_create(&cli->thread, NULL, receive_text_messages, cli);
@@ -150,7 +154,7 @@ void free_client(Client cli) {
 
         if (bytes_read == 0) {
             UIDisplayMessage(cli->ui, "Server disconnected");
-            atomic_store(&cli->shutdown, true);
+            ClientFree(cli);
             return NULL;
         }
 
@@ -160,7 +164,7 @@ void free_client(Client cli) {
         GDMPMessage msg = GDMPParse(msg_str);
 
         // Validate message
-        if (msg->type != GDMP_TEXT_MESSAGE || !GDMPValidate(msg)) return NULL;
+        if (!GDMPValidate(msg)) return NULL;
 
         // Access headers
         char *username = GDMPGetValue(msg, "Username");
@@ -186,7 +190,7 @@ void free_client(Client cli) {
  */
 void handle_command(Client cli, char *command) {
     if (strcmp(command, "/exit") == 0) {
-        atomic_store(&cli->shutdown, true);
+        ClientFree(cli);
     } else if (strcmp(command, "/clear") == 0) {
         UIClearMessages(cli->ui);
     } else {

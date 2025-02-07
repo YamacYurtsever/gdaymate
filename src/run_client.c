@@ -4,12 +4,18 @@
 
 #include "client.h"
 
+Client cli;
+
+void handle_sigint(int signal);
+
 int main(void) {
     Client cli = ClientNew();
     if (cli == NULL) {
         fprintf(stderr, "ClientNew: error\n");
         exit(EXIT_FAILURE);
     }
+
+    signal(SIGINT, handle_sigint);
 
     int res = ClientStart(cli);
     if (res == -1) {
@@ -18,4 +24,8 @@ int main(void) {
     }
 
     return 0;
+}
+
+void handle_sigint(int signal) {
+    ClientFree(cli);
 }
