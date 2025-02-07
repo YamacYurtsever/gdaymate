@@ -86,6 +86,23 @@ Value HashTableGet(HashTable ht, Key key) {
     return NULL;
 }
 
+HashTable HashTableCopy(HashTable table) {
+    HashTable copy = malloc(sizeof(struct hash_table));
+    if (copy == NULL) {
+        perror("malloc");
+		exit(EXIT_FAILURE);
+    }
+
+    copy->slots = malloc(table->num_slots * RESIZE_FACTOR * sizeof(struct slot));
+    copy->num_slots = table->num_slots;
+
+    for (int i = 0; i < copy->num_slots; i++) {
+        copy->slots[i] = table->slots[i];
+	}
+
+    return copy;
+}
+
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
 /**

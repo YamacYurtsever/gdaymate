@@ -78,10 +78,8 @@ void ThreadPoolFree(ThreadPool pool) {
 }
 
 void ThreadPoolAddTask(ThreadPool pool, Task task) {
-    pthread_mutex_lock(&pool->lock);
     TaskQueueEnqueue(pool->task_queue, task);
     pthread_cond_signal(&pool->cond);
-    pthread_mutex_unlock(&pool->lock);
 }
 
 void *ThreadPoolWorker(void *arg) {

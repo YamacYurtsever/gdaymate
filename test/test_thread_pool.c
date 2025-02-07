@@ -10,7 +10,7 @@
 
 void test_ThreadPoolNew(void);
 void test_ThreadPoolAddTask(void);
-void log_task(void *arg);
+void *log_task(void *arg);
 
 int main(void) {
     test_ThreadPoolNew();
@@ -46,7 +46,8 @@ void test_ThreadPoolAddTask(void) {
     ThreadPoolFree(pool);
 }
 
-void log_task(void *arg) {
+void *log_task(void *arg) {
     int log_task_arg = *(int *)arg;
     printf("Executing task with argument: %d\n", log_task_arg);
+    return NULL;
 }

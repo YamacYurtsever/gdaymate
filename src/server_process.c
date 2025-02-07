@@ -16,7 +16,7 @@ struct send_text_message_arg {
     int client_sockfd;
 };
 
-void send_text_message(void *arg);
+void *send_text_message(void *arg);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -54,7 +54,7 @@ void process_text_message(Server srv, GDMPMessage msg, int client_sockfd) {
 
         // Create a task to send text message
         struct send_text_message_arg *arg = malloc(sizeof(struct send_text_message_arg));
-        arg->msg = msg;
+        arg->msg = GDMPCopy(msg);
         arg->client_sockfd = srv->poll_set[i].fd;
         Task task = TaskNew(send_text_message, arg);
 
@@ -65,12 +65,14 @@ void process_text_message(Server srv, GDMPMessage msg, int client_sockfd) {
 }
 
 void process_join_message(Server srv, GDMPMessage msg, int client_sockfd) {
-
+    // TODO
 }
 
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
-void send_text_message(void *arg) {
+void *send_text_message(void *arg) {
+    printf("I think I'm getting stuck daddy\n"); // DEBUG
+
     struct send_text_message_arg *msg_arg = (struct send_text_message_arg *)arg;
     GDMPMessage msg = msg_arg->msg;
     int client_sockfd = msg_arg->client_sockfd;
@@ -80,16 +82,14 @@ void send_text_message(void *arg) {
 
     // Send string
     ssize_t bytes_sent = send(client_sockfd, msg_str, strlen(msg_str), MSG_DONTWAIT);
-    if (bytes_sent == -1) {
-        if (!(errno == EWOULDBLOCK || errno == EAGAIN)) {
-            perror("send");
-        }
-
-        free(msg_str);
-        free(msg_arg);
-        return;
+    if (bytes_sent == -1 && !(errno == EWOULDBLOCK || errno == EAGAIN)) {
+        perror("send");
     }
 
+    printf("I aint no longer stuck thanks daddy\n"); // DEBUG
+
+    GDMPFree(msg);
     free(msg_str);
     free(msg_arg);
+    return NULL;
 }

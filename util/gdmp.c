@@ -135,6 +135,19 @@ bool GDMPValidate(GDMPMessage msg) {
     return true;
 }
 
+GDMPMessage GDMPCopy(GDMPMessage msg) {
+    GDMPMessage copy = malloc(sizeof(*msg));
+    if (copy == NULL) {
+        perror("malloc");
+        return NULL;
+    }
+
+    copy->type = msg->type;
+    copy->data = HashTableCopy(msg->data);
+
+    return copy;
+}
+
 ////////////////////////////// HELPER FUNCTIONS ////////////////////////////////
 
 /** 

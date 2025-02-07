@@ -25,7 +25,7 @@ int check_poll_set(Server srv);
 int get_client(Server srv);
 int add_client(Server srv, int client_sockfd);
 int remove_client(Server srv, int client_sockfd);
-void receive_message(void *arg);
+void *receive_message(void *arg);
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
@@ -299,7 +299,7 @@ int remove_client(Server srv, int client_sockfd) {
  * Receives a GDMP message from the client, parses it, validates it, 
  * and sends it to processing. Executed by treads in the thread pool.
  */
-void receive_message(void *arg) {
+void *receive_message(void *arg) {
     struct receive_message_arg *msg_arg = (struct receive_message_arg *)arg;
     Server srv = msg_arg->srv;
     int client_sockfd = msg_arg->client_sockfd;
@@ -314,7 +314,7 @@ void receive_message(void *arg) {
         }
 
         add_client(srv, client_sockfd);
-        return;
+        return NULL;
     }
 
     if (bytes_read == 0) {
@@ -323,7 +323,7 @@ void receive_message(void *arg) {
         }
 
         close(client_sockfd);
-        return;
+        return NULL;
     }
 
     msg_str[bytes_read] = '\0';
@@ -332,7 +332,7 @@ void receive_message(void *arg) {
     GDMPMessage msg = GDMPParse(msg_str);
 
     // Validate message
-    if (!GDMPValidate(msg)) return;
+    if (!GDMPValidate(msg)) return NULL;;
 
     // Process message
     process_message(srv, msg, client_sockfd);
@@ -342,4 +342,5 @@ void receive_message(void *arg) {
 
     GDMPFree(msg);
     free(msg_arg);
+    return NULL;
 }

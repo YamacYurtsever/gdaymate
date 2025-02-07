@@ -7,7 +7,7 @@
 
 void test_TaskNew(void);
 void test_TaskExecute(void);
-void log_task(void *arg);
+void *log_task(void *arg);
 
 int main(void) {
     test_TaskNew();
@@ -32,7 +32,8 @@ void test_TaskExecute(void) {
     TaskFree(task);
 }
 
-void log_task(void *arg) {
+void *log_task(void *arg) {
     int log_task_arg = *(int *)arg;
     printf("Executing task with argument: %d\n", log_task_arg);
+    return NULL;
 }

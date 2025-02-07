@@ -18,7 +18,7 @@ typedef struct task_arg *TaskArg;
  * Creates a new task.
  * Returns NULL on error.
  */
-Task TaskNew(void (*function)(void *arg), void *arg);
+Task TaskNew(void *(*function)(void *arg), void *arg);
 
 /**
  * Frees a task.

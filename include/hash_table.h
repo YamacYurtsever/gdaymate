@@ -36,4 +36,9 @@ bool HashTableContains(HashTable table, Key key);
  */
 Value HashTableGet(HashTable table, Key key);
 
+/**
+ * Creates a deep copy of a hash table.
+ */
+HashTable HashTableCopy(HashTable table);
+
 #endif

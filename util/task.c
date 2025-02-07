@@ -6,11 +6,11 @@
 #include "task.h"
 
 struct task {
-    void (*function)(void *arg);
+    void *(*function)(void *arg);
     void *arg;
 };
 
-Task TaskNew(void (*function)(void *arg), void *arg) {
+Task TaskNew(void *(*function)(void *arg), void *arg) {
     Task task = malloc(sizeof(struct task));
     if (task == NULL) {
         perror("malloc");

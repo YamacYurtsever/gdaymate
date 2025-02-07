@@ -9,7 +9,7 @@
 void test_TaskQueueNew(void);
 void test_TaskQueueEnqueueDequeue(void);
 void test_TaskQueueIsEmpty(void);
-void log_task(void *arg);
+void *log_task(void *arg);
 
 int main(void) {
     test_TaskQueueNew();
@@ -77,7 +77,8 @@ void test_TaskQueueIsEmpty(void) {
     TaskQueueFree(q);
 }
 
-void log_task(void *arg) {
+void *log_task(void *arg) {
     int log_task_arg = *(int *)arg;
     printf("Executing task with argument: %d\n", log_task_arg);
+    return NULL;
 }

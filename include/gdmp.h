@@ -64,4 +64,9 @@ GDMPMessage GDMPParse(char *str);
  */
 bool GDMPValidate(GDMPMessage msg);
 
+/**
+ * Creates a deep copy of a GDMP message.
+ */
+GDMPMessage GDMPCopy(GDMPMessage msg);
+
 #endif

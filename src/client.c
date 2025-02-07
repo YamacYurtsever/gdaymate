@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <stdatomic.h>
+#include <pthread.h>
 
 #include "client.h"
 #include "gdmp.h"
@@ -13,9 +15,13 @@
 struct client {
     int sockfd;
     UI ui;
+    pthread_t receive_message_thread;
+    atomic_bool shutdown;
 };
 
 int setup_client(Client cli);
+void free_client(Client cli);
+void *receive_message(void *arg);
 void handle_command(Client cli, char *command);
 char *get_timestamp(void);
 
@@ -38,6 +44,8 @@ Client ClientNew(void) {
         return NULL;
     }
 
+    atomic_store(&cli->shutdown, false);
+
     // Setup the client
     int res = setup_client(cli);
     if (res == -1) {
@@ -53,18 +61,18 @@ Client ClientNew(void) {
 }
 
 void ClientFree(Client cli) {
-    UIFree(cli->ui);
-    close(cli->sockfd);
-    free(cli);
-    exit(EXIT_SUCCESS);
+    atomic_store(&cli->shutdown, true);
 }
 
 int ClientStart(Client cli) {
+    // Start receive message thread;
+    pthread_create(&cli->receive_message_thread, NULL, receive_message, cli);
+
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
     UIDisplayInput(cli->ui, "Username: ", username, GDMP_USERNAME_MAX_LEN);
 
-    while (1) {
+    while (!atomic_load(&cli->shutdown)) {
         // Get content
         char content[GDMP_CONTENT_MAX_LEN];
         UIDisplayInput(cli->ui, "Content: ", content, GDMP_CONTENT_MAX_LEN);
@@ -88,6 +96,7 @@ int ClientStart(Client cli) {
         }
     }
 
+    free_client(cli);
     return 0;
 }
 
@@ -115,6 +124,66 @@ int setup_client(Client cli) {
 
     return 0;
 }
+
+/**
+ * Frees client.
+ */
+void free_client(Client cli) {
+    close(cli->sockfd);
+    pthread_join(cli->receive_message_thread, NULL);
+    UIFree(cli->ui);
+    free(cli);
+}
+
+/**
+ * Receives GDMP messages from the server, parses them, validates them, 
+ * and displays them. Executed by a seperate thread.
+ */
+ void *receive_message(void *arg) {
+    Client cli = (Client)arg;
+
+    while (!atomic_load(&cli->shutdown)) {
+        // Receive string
+        char msg_str[GDMP_MESSAGE_MAX_LEN];
+        ssize_t bytes_read = recv(cli->sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, 0);
+
+        if (bytes_read < 0) {
+            perror("recv");
+            return NULL;
+        }
+
+        if (bytes_read == 0) {
+            UIDisplayMessage(cli->ui, "Server disconnected");
+            ClientFree(cli);
+            return NULL;
+        }
+
+        msg_str[bytes_read] = '\0';
+
+        // Parse string
+        GDMPMessage msg = GDMPParse(msg_str);
+
+        // Validate message
+        if (!GDMPValidate(msg)) return NULL;
+
+        // Access headers
+        char *username = GDMPGetValue(msg, "Username");
+        char *content = GDMPGetValue(msg, "Content");
+        char *timestamp = GDMPGetValue(msg, "Timestamp");
+
+        // Display message
+        char message[GDMP_MESSAGE_MAX_LEN];
+        snprintf(
+            message, GDMP_MESSAGE_MAX_LEN, 
+            "[%s] %s: %s", timestamp, username, content
+        );
+        UIDisplayMessage(cli->ui, message);
+
+        GDMPFree(msg);
+    }
+
+    return NULL;
+ }
 
 /**
  * Handles the given command string.
