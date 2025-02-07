@@ -332,7 +332,7 @@ void *receive_message(void *arg) {
     GDMPMessage msg = GDMPParse(msg_str);
 
     // Validate message
-    if (!GDMPValidate(msg)) return NULL;;
+    if (!GDMPValidate(msg, GDMPGetType(msg))) return NULL;;
 
     // Process message
     process_message(srv, msg, client_sockfd);

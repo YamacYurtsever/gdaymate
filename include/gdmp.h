@@ -59,10 +59,10 @@ char *GDMPStringify(GDMPMessage msg);
 GDMPMessage GDMPParse(char *str);
 
 /**
- * Checks if a GDMP message's type and its headers match.
+ * Validates a GDMP message according to a message type.
  * Returns true for a valid message, and false otherwise.
  */
-bool GDMPValidate(GDMPMessage msg);
+bool GDMPValidate(GDMPMessage msg, MessageType type);
 
 /**
  * Creates a deep copy of a GDMP message.

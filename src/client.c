@@ -142,6 +142,8 @@ void free_client(Client cli) {
  void *receive_messages(void *arg) {
     Client cli = (Client)arg;
 
+    UIDisplayMessage(cli->ui, "Connected to server");
+
     while (!atomic_load(&cli->shutdown)) {
         // Receive string
         char msg_str[GDMP_MESSAGE_MAX_LEN];
@@ -149,13 +151,11 @@ void free_client(Client cli) {
 
         if (bytes_read < 0) {
             perror("recv");
-            return NULL;
+            break;
         }
 
         if (bytes_read == 0) {
-            UIDisplayMessage(cli->ui, "Server disconnected");
-            ClientFree(cli);
-            return NULL;
+            break;
         }
 
         msg_str[bytes_read] = '\0';
@@ -164,7 +164,7 @@ void free_client(Client cli) {
         GDMPMessage msg = GDMPParse(msg_str);
 
         // Validate message
-        if (!GDMPValidate(msg)) return NULL;
+        if (!GDMPValidate(msg, GDMP_TEXT_MESSAGE)) return NULL;
 
         // Access headers
         char *username = GDMPGetValue(msg, "Username");
@@ -182,6 +182,9 @@ void free_client(Client cli) {
         GDMPFree(msg);
     }
 
+    UIDisplayMessage(cli->ui, "Disconnected from server");
+
+    ClientFree(cli);
     return NULL;
  }
 

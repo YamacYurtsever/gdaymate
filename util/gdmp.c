@@ -124,9 +124,12 @@ GDMPMessage GDMPParse(char *str) {
     return msg;
 }
 
-bool GDMPValidate(GDMPMessage msg) {
-    char **headers = get_headers(msg->type);
+bool GDMPValidate(GDMPMessage msg, MessageType type) {
+    // Check message type
+    if (msg->type != type) return false;
 
+    // Check if headers match message type
+    char **headers = get_headers(msg->type);
     for (int i = 0; i < GDMP_HEADERS_MAX_COUNT && headers[i] != NULL; i++) {
         char *value = GDMPGetValue(msg, headers[i]);
         if (value == NULL) return false;
@@ -166,6 +169,7 @@ char **get_headers(MessageType type) {
             headers[2] = "Timestamp";
             break;
         case GDMP_JOIN_MESSAGE:
+            // TODO
             break;
         case GDMP_ERROR_MESSAGE:
             break;

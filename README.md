@@ -7,9 +7,9 @@
 1. Create a TCP server
 	- Create a socket
 	- Create a poll set
-	- Create a thread pool
+	- Create a [[Concurrency#Thread Pools | thread pool]]
 	- Setup the server
-		- Define the server socket address
+		- Define the server [[Networks#Socket Adresses | socket address]]
 		- Bind server socket to server socket address
 		- Add server socket to poll set
 2. Start the server
@@ -46,8 +46,12 @@
 
 - Process Text Message
 	1. Access the headers
-	2. Log the content
+	2. Log the message
 	3. Broadcast to other clients
+		- Create a task to send the text message (for each client)
+			- Serialize the message
+			- Send the string
+		- Add task to the task queue (of the thread pool)
 - Process Join Message (TODO)
 
 ##### Diagram
@@ -64,12 +68,22 @@
 	- Setup the client
 		- Define server socket address
 		- Connect client socket to server socket address
-1. Start the client
+2. Start the client
+	- Start the receive messages loop (on a seperate thread)
 	- Get the username
 	- Start client loop
-2. Stop the client (on SIGINT)
+3. Stop the client (on SIGINT)
 	- Close the socket
+	- Wait for receive message thread to join
 	- Free the user interface
+
+##### Receive Messages Loop
+
+1. Receive the string
+2. Parse the string
+3. Validate the message
+4. Access the headers
+5. Display the message
 
 ##### Client Loop
 
@@ -92,6 +106,10 @@
 
 - `/exit`: Stop the client
 - `/clear`: Clear messages
+
+##### Diagram
+
+<img src="images/client_diagram.png" width="450"/>
 
 ---
 
