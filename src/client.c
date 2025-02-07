@@ -15,13 +15,13 @@
 struct client {
     int sockfd;
     UI ui;
-    pthread_t receive_message_thread;
+    pthread_t thread;
     atomic_bool shutdown;
 };
 
 int setup_client(Client cli);
 void free_client(Client cli);
-void *receive_message(void *arg);
+void *receive_text_messages(void *arg);
 void handle_command(Client cli, char *command);
 char *get_timestamp(void);
 
@@ -61,8 +61,8 @@ Client ClientNew(void) {
 }
 
 int ClientStart(Client cli) {
-    // Start receive message thread;
-    pthread_create(&cli->receive_message_thread, NULL, receive_message, cli);
+    // Start a thread for receiving text messages from the server
+    pthread_create(&cli->thread, NULL, receive_text_messages, cli);
 
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
@@ -126,16 +126,16 @@ int setup_client(Client cli) {
  */
 void free_client(Client cli) {
     close(cli->sockfd);
-    pthread_join(cli->receive_message_thread, NULL);
+    pthread_join(cli->thread, NULL);
     UIFree(cli->ui);
     free(cli);
 }
 
 /**
- * Receives GDMP messages from the server, parses them, validates them, 
+ * Receives GDMP text messages from the server, parses them, validates them, 
  * and displays them. Executed by a seperate thread.
  */
- void *receive_message(void *arg) {
+ void *receive_text_messages(void *arg) {
     Client cli = (Client)arg;
 
     while (!atomic_load(&cli->shutdown)) {
@@ -160,7 +160,7 @@ void free_client(Client cli) {
         GDMPMessage msg = GDMPParse(msg_str);
 
         // Validate message
-        if (!GDMPValidate(msg)) return NULL;
+        if (msg->type != GDMP_TEXT_MESSAGE || !GDMPValidate(msg)) return NULL;
 
         // Access headers
         char *username = GDMPGetValue(msg, "Username");
