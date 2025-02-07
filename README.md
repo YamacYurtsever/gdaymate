@@ -1,4 +1,4 @@
-**Gdaymate** is a simple CLI-based client-server messaging app
+**Gdaymate** is a CLI-based multithreded client-server chatting app using a custom network protocol for structured communication
 
 ---
 
