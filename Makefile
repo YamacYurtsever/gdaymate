@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = clang
-CFLAGS = -Wall -Wvla -Werror -Iinclude -Imulti/include -fsanitize=address -lncurses
+CFLAGS = -Wall -Wvla -Werror -Iinclude -lncurses
 
 # Directories
 SRC_DIR = src
@@ -18,6 +18,16 @@ TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
 SERVER_TARGET = $(BIN_DIR)/run_server
 CLIENT_TARGET = $(BIN_DIR)/run_client
 TEST_TARGETS = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/%, $(TEST_FILES))
+
+########################################################################
+
+.PHONY: asan msan tsan
+
+asan: CFLAGS += -fsanitize=address,undefined
+asan: all
+
+tsan: CFLAGS += -fsanitize=thread
+tsan: all
 
 ########################################################################
 

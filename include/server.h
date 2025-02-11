@@ -8,6 +8,7 @@
 #define SERVER_PORT 8080
 #define SERVER_THREAD_COUNT 5
 #define SERVER_MAX_BACKLOG 5
+#define SERVER_MAX_CLIENT_COUNT 1024
 #define SERVER_MAX_POLL_COUNT 1024
 #define SERVER_POLL_TIMEOUT 0
 #define SERVER_DEBUG_MODE 1
@@ -17,6 +18,8 @@ typedef struct thread_pool *ThreadPool; // Prevent circular dependency
 
 struct server {
     int sockfd;
+    int *clients;
+    int client_count;
     struct pollfd *poll_set;
     int poll_count;
     ThreadPool pool;

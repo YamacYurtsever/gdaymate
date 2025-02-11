@@ -7,6 +7,8 @@
 #include <time.h>
 #include <stdatomic.h>
 #include <pthread.h>
+#include <errno.h>
+#include <poll.h>
 
 #include "client.h"
 #include "gdmp.h"
@@ -24,6 +26,7 @@ void free_client(Client cli);
 void *receive_messages(void *arg);
 void handle_command(Client cli, char *command);
 char *get_timestamp(void);
+void display_message(Client cli, char *username, char *content, char* timestamp);
 
 int send_text_message(Client cli, char *username, char *content, char *timestamp);
 int send_join_message(Client cli);
@@ -66,7 +69,11 @@ void ClientFree(Client cli) {
 
 int ClientStart(Client cli) {
     // Start receive message loop (on a seperate thread)
-    pthread_create(&cli->thread, NULL, receive_messages, cli);
+    int res = pthread_create(&cli->thread, NULL, receive_messages, cli);
+    if (res == -1) {
+        perror("pthread_create");
+        return -1;
+    }
 
     // Get username
     char username[GDMP_USERNAME_MAX_LEN];
@@ -145,6 +152,7 @@ void free_client(Client cli) {
     UIDisplayMessage(cli->ui, "Connected to server");
 
     while (!atomic_load(&cli->shutdown)) {
+
         // Receive string
         char msg_str[GDMP_MESSAGE_MAX_LEN];
         ssize_t bytes_read = recv(cli->sockfd, msg_str, GDMP_MESSAGE_MAX_LEN - 1, 0);
@@ -172,12 +180,7 @@ void free_client(Client cli) {
         char *timestamp = GDMPGetValue(msg, "Timestamp");
 
         // Display message
-        char message[GDMP_MESSAGE_MAX_LEN];
-        snprintf(
-            message, GDMP_MESSAGE_MAX_LEN, 
-            "[%s] %s: %s", timestamp, username, content
-        );
-        UIDisplayMessage(cli->ui, message);
+        display_message(cli, username, content, timestamp);
 
         GDMPFree(msg);
     }
@@ -212,6 +215,18 @@ char *get_timestamp(void) {
     return timestamp;
 }
 
+/**
+ * Displays a message with the given fields.
+ */
+void display_message(Client cli, char *username, char* content, char *timestamp) {
+    char message[GDMP_MESSAGE_MAX_LEN];
+    snprintf(
+        message, GDMP_MESSAGE_MAX_LEN, 
+        "[%s] %s: %s", timestamp, username, content
+    );
+    UIDisplayMessage(cli->ui, message);
+}
+
 /////////////////////////////////// SENDING ////////////////////////////////////
 
 /**
@@ -239,12 +254,7 @@ int send_text_message(Client cli, char *username, char *content, char *timestamp
     }
 
     // Display message
-    char message[GDMP_MESSAGE_MAX_LEN];
-    snprintf(
-        message, GDMP_MESSAGE_MAX_LEN, 
-        "[%s] %s: %s", timestamp, username, content
-    );
-    UIDisplayMessage(cli->ui, message);
+    display_message(cli, username, content, timestamp);
 
     free(timestamp);
     free(msg_str);

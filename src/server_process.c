@@ -47,15 +47,14 @@ void process_text_message(Server srv, GDMPMessage msg, int client_sockfd) {
     // Broadcast to other clients
     pthread_mutex_lock(&srv->lock);
     for (int i = 0; i < srv->poll_count; i++) {
-        if (srv->poll_set[i].fd == srv->sockfd || 
-            srv->poll_set[i].fd == client_sockfd) {
+        if (srv->clients[i] == client_sockfd) {
             continue;
         }
 
         // Create a task to send text message
         struct send_text_message_arg *arg = malloc(sizeof(struct send_text_message_arg));
         arg->msg = GDMPCopy(msg);
-        arg->client_sockfd = srv->poll_set[i].fd;
+        arg->client_sockfd = srv->clients[i];
         Task task = TaskNew(send_text_message, arg);
 
         // Add task to task queue
