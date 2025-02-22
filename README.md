@@ -7,9 +7,9 @@
 1. Create a TCP server
 	- Create a socket
 	- Create a poll set
-	- Create a [[Concurrency#Thread Pools | thread pool]]
+	- Create a thread pool
 	- Setup the server
-		- Define the server [[Networks#Socket Adresses | socket address]]
+		- Define the server socket address
 		- Bind server socket to server socket address
 		- Add server socket to poll set
 2. Start the server
